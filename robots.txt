@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://demin6632-del.github.io/chronicles-of-the-abyss-site/sitemap.xml
