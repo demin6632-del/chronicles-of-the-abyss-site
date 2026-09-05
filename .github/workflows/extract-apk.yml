@@ -1,0 +1,43 @@
+name: Publish APK from public ZIP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract APK from public ZIP
+        shell: bash
+        run: |
+          set -e
+          if [ -f ChroniclesOfTheAbyss.apk ]; then
+            echo "APK already exists"
+            exit 0
+          fi
+          unzip -j -o ChroniclesOfTheAbyss.apk.zip '*.apk' -d .
+          APK_FILE=$(find . -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$APK_FILE"
+          mv "$APK_FILE" ChroniclesOfTheAbyss.apk
+          sha256sum ChroniclesOfTheAbyss.apk > ChroniclesOfTheAbyss.apk.sha256
+
+      - name: Commit APK
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ChroniclesOfTheAbyss.apk ChroniclesOfTheAbyss.apk.sha256
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Автоматически опубликовать APK из ZIP"
+          git push
