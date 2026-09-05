@@ -23,10 +23,13 @@ jobs:
             echo "APK already exists"
             exit 0
           fi
-          unzip -j -o ChroniclesOfTheAbyss.apk.zip '*.apk' -d .
-          APK_FILE=$(find . -maxdepth 1 -type f -name '*.apk' -print -quit)
+          rm -rf .apk_extract
+          mkdir .apk_extract
+          unzip -j -o ChroniclesOfTheAbyss.apk.zip '*.apk' -d .apk_extract
+          APK_FILE=$(find .apk_extract -maxdepth 1 -type f -name '*.apk' -print -quit)
           test -n "$APK_FILE"
           mv "$APK_FILE" ChroniclesOfTheAbyss.apk
+          rm -rf .apk_extract
           sha256sum ChroniclesOfTheAbyss.apk > ChroniclesOfTheAbyss.apk.sha256
 
       - name: Commit APK
