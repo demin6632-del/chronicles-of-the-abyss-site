@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#070510">
 <title>Хроники Бездны — официальный сайт</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#070510;color:#f3efff}body{background:radial-gradient(circle at 50% 0,#2b1452 0,#10091d 35%,#070510 72%);padding:20px}.wrap{max-width:760px;margin:auto}.hero{padding:34px 22px 24px;text-align:center}.hero h1{font-size:clamp(32px,9vw,58px);margin:0 0 10px;letter-spacing:.02em}.hero p{margin:0;color:#bdb4cf;font-size:17px}.card{background:rgba(18,11,31,.88);border:1px solid #3d2b58;border-radius:22px;padding:22px;margin:16px 0;box-shadow:0 18px 50px rgba(0,0,0,.3)}.buttons{display:grid;gap:12px}.btn{display:block;text-align:center;text-decoration:none;border-radius:15px;padding:16px 18px;font-weight:800;font-size:17px;background:#7d3cff;color:#fff}.btn.alt{background:#21172f;border:1px solid #5a4574}.card h2{margin:0 0 12px;font-size:22px}.card p,.card li{color:#c8bfd5;line-height:1.55}.steps{margin:0;padding-left:22px}.footer{text-align:center;color:#827890;font-size:14px;padding:20px 0 8px}.small{font-size:13px;color:#827890}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#070510;color:#f3efff}body{background:radial-gradient(circle at 50% 0,#2b1452 0,#10091d 35%,#070510 72%);padding:20px}.wrap{max-width:760px;margin:auto}.hero{padding:34px 22px 24px;text-align:center}.hero h1{font-size:clamp(32px,9vw,58px);margin:0 0 10px;letter-spacing:.02em}.hero p{margin:0;color:#bdb4cf;font-size:17px}.card{background:rgba(18,11,31,.88);border:1px solid #3d2b58;border-radius:22px;padding:22px;margin:16px 0;box-shadow:0 18px 50px rgba(0,0,0,.3)}.buttons{display:grid;gap:12px}.btn{display:block;text-align:center;text-decoration:none;border-radius:15px;padding:16px 18px;font-weight:800;font-size:17px;background:#7d3cff;color:#fff;border:0;cursor:pointer}.btn.alt{background:#21172f;border:1px solid #5a4574}.card h2{margin:0 0 12px;font-size:22px}.card p,.card li{color:#c8bfd5;line-height:1.55}.steps{margin:0;padding-left:22px}.footer{text-align:center;color:#827890;font-size:14px;padding:20px 0 8px}.small{font-size:13px;color:#827890}.status{display:none;text-align:center;margin-top:10px;color:#bdb4cf;font-size:14px}
 </style>
 </head>
 <body>
@@ -18,15 +18,16 @@
 <section class="card">
 <h2>Скачать игру</h2>
 <div class="buttons">
-<a class="btn" href="ChroniclesOfTheAbyss.apk">Скачать APK</a>
+<button class="btn" id="apkDownload">Скачать APK</button>
 <a class="btn alt" href="ChroniclesOfTheAbyss.apk.zip">Скачать ZIP с APK</a>
 </div>
+<div class="status" id="status">Подготавливаем APK…</div>
 <p class="small">Для Android. Если мессенджер блокирует APK, используйте ZIP.</p>
 </section>
 <section class="card">
 <h2>Установка на Android</h2>
 <ol class="steps">
-<li>Скачайте APK или ZIP.</li>
+<li>Нажмите «Скачать APK» или скачайте ZIP.</li>
 <li>Если скачан ZIP — распакуйте его.</li>
 <li>Откройте файл <b>ChroniclesOfTheAbyss.apk</b>.</li>
 <li>Разрешите установку из этого источника, если Android попросит.</li>
@@ -39,5 +40,45 @@
 </section>
 <footer class="footer">© 2026 Олег Дёмин. Все права защищены.</footer>
 </div>
+<script>
+const zipUrl='ChroniclesOfTheAbyss.apk.zip';
+const apkName='ChroniclesOfTheAbyss.apk';
+const button=document.getElementById('apkDownload');
+const status=document.getElementById('status');
+function u16(v,o){return v[o]|v[o+1]<<8}
+function u32(v,o){return (v[o]|v[o+1]<<8|v[o+2]<<16|v[o+3]<<24)>>>0}
+async function downloadApk(){
+  button.disabled=true; status.style.display='block'; status.textContent='Подготавливаем APK…';
+  try{
+    const r=await fetch(zipUrl,{cache:'no-store'}); if(!r.ok) throw new Error('ZIP недоступен');
+    const b=new Uint8Array(await r.arrayBuffer());
+    let eocd=-1;
+    for(let i=b.length-22;i>=Math.max(0,b.length-22-65535);i--){if(u32(b,i)===0x06054b50){eocd=i;break}}
+    if(eocd<0) throw new Error('ZIP повреждён');
+    const cdSize=u32(b,eocd+12), cdOffset=u32(b,eocd+16); let p=cdOffset, found=null;
+    const dec=new TextDecoder();
+    while(p<cdOffset+cdSize){
+      if(u32(b,p)!==0x02014b50) break;
+      const method=u16(b,p+10), csize=u32(b,p+20), usize=u32(b,p+24), nlen=u16(b,p+28), xlen=u16(b,p+30), clen=u16(b,p+32), lo=u32(b,p+42);
+      const name=dec.decode(b.slice(p+46,p+46+nlen));
+      if(name===apkName || name.endsWith('/'+apkName)){found={method,csize,usize,lo};break}
+      p+=46+nlen+xlen+clen;
+    }
+    if(!found) throw new Error('APK внутри ZIP не найден');
+    const nlen=u16(b,found.lo+26), xlen=u16(b,found.lo+28), start=found.lo+30+nlen+xlen;
+    const compressed=b.slice(start,start+found.csize);
+    let data;
+    if(found.method===0) data=compressed;
+    else if(found.method===8){data=new Uint8Array(await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+    else throw new Error('Неподдерживаемый формат ZIP');
+    if(found.usize && data.byteLength!==found.usize) throw new Error('Ошибка распаковки');
+    const url=URL.createObjectURL(new Blob([data],{type:'application/vnd.android.package-archive'}));
+    const a=document.createElement('a'); a.href=url; a.download=apkName; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000); status.textContent='APK готов к установке.';
+  }catch(e){status.textContent='Не удалось подготовить APK. Используйте ZIP.'; console.error(e)}
+  finally{button.disabled=false}
+}
+button.addEventListener('click',downloadApk);
+</script>
 </body>
 </html>
