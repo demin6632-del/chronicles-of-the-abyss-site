@@ -1,0 +1,1571 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#080b14"><title>Хроники Бездны — Roguelike</title><style>
+:root{--bg:#080b14;--panel:#111827;--panel2:#0d1422;--line:#26334d;--text:#eef2ff;--muted:#8d99b5;--accent:#8b5cf6;--good:#35d07f;--bad:#ff5577;--gold:#f6c453;--blue:#58a6ff;--orange:#ff9f43}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  contain:layout style paint;margin:0;height:100%;background:radial-gradient(circle at top,#14182a,#080b14 65%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+button,input{font:inherit}button{border:0;color:inherit;cursor:pointer;touch-action:manipulation}
+#app{max-width:520px;height:100%;margin:auto;display:flex;flex-direction:column}
+header{padding:12px 12px 8px;background:rgba(8,11,20,.92);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.floatingMenu{position:fixed;right:14px;bottom:18px;z-index:15;width:48px;height:48px;border:1px solid var(--line);border-radius:50%;background:#111827;color:var(--text);font-size:24px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.top{display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:900}.sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:7px;text-align:center;font-size:12px}.stat b{display:block;font-size:14px;margin-top:2px}
+#screen{flex:1;overflow:auto;padding:10px 10px 90px}
+.card{background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(12,18,30,.98));border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:10px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+h1,h2,h3{margin:0 0 8px}h1{font-size:27px}h2{font-size:19px}h3{font-size:15px}.muted{color:var(--muted)}.small{font-size:12px}.good{color:var(--good)}.bad{color:var(--bad)}.gold{color:var(--gold)}.accent{color:#c4b5fd}
+.btn{width:100%;background:#182238;border:1px solid #30405f;border-radius:12px;padding:11px 10px;margin:5px 0;text-align:left;font-weight:700}.btn:active{transform:scale(.985)}.btn:disabled{opacity:.4;cursor:not-allowed}.primary{background:#39266b;border-color:#7655c9}.dangerBtn{background:#3b1825;border-color:#743348}.goodBtn{background:#143324;border-color:#2c6d4b}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.badge{display:inline-block;padding:3px 7px;border:1px solid #35445f;border-radius:99px;font-size:10px;margin:2px;background:#0c1422;color:#aebbd4}
+.bar{height:9px;background:#070a10;border:1px solid #26334d;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--good)}.bar.hp i{background:#e64b69}.bar.mp i{background:#4d9dff}.bar.xp i{background:#9b6cff}
+.fight{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fighter{background:#0c1320;border:1px solid var(--line);border-radius:14px;padding:10px}.fighter h3{font-size:17px}.intent{padding:8px;margin-top:7px;border:1px solid #6d3d4c;background:#26151d;border-radius:10px;font-size:12px}
+.statuses{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.status{font-size:10px;padding:3px 6px;border-radius:7px;background:#202a3d;border:1px solid #34425b}
+.nodegrid{display:grid;grid-template-columns:repeat(8,minmax(64px,1fr));gap:7px;overflow-x:auto;padding-bottom:5px}.node{min-width:64px;min-height:72px;border-radius:12px;background:#101827;border:1px solid #26334d;padding:6px;font-size:10px;text-align:center}.node.can{border-color:#7655c9;box-shadow:0 0 12px rgba(139,92,246,.18)}.node.current{outline:2px solid #f6c453}.node.lock{opacity:.3}.node.boss{border-color:#a63f57;background:#28131b}
+.reward{padding:11px;border:1px solid #31405b;background:#101a2c;border-radius:12px;margin:6px 0;text-align:left}.reward strong{display:block;font-size:15px}.rar-common{color:#d4d8e1}.rar-uncommon{color:#59d68a}.rar-rare{color:#63a4ff}.rar-epic{color:#c18cff}.rar-legendary{color:#ffb84d}
+.item{padding:9px;border:1px solid var(--line);border-radius:11px;background:#0c1421;margin:5px 0}.item b{font-size:13px}.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.pill{padding:4px 7px;border-radius:8px;background:#182238;font-size:11px}
+.log{font-size:12px;line-height:1.45;padding:8px 10px;border-left:3px solid #34415b;background:#0b111d;border-radius:8px;margin:4px 0}.log.combat{border-left-color:#e64b69}.log.good{border-left-color:#35d07f}.log.warn{border-left-color:#f6c453}
+footer{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:auto;padding:7px 9px calc(7px + env(safe-area-inset-bottom));background:rgba(7,10,17,.96);border-top:1px solid var(--line);z-index:10}
+.modalBack{position:fixed;inset:0;background:#080b14;display:flex;align-items:flex-end;z-index:20}.modal{position:relative;width:100%;max-width:520px;margin:auto;background:#101827;border:1px solid var(--line);border-radius:18px 18px 0 0;padding:15px;max-height:90vh;overflow:auto}.modalClose{position:absolute;top:8px;right:10px;width:40px;height:40px;padding:0;margin:0;border:1px solid var(--line);border-radius:50%;background:#111827;color:var(--text);font-size:28px;line-height:38px;text-align:center;z-index:2}.modalClose:active{transform:scale(.96)}
+input{width:100%;background:#080d17;border:1px solid #33415d;color:white;padding:11px;border-radius:10px;margin:5px 0 10px}
+hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+@media(min-width:560px){footer{bottom:8px;border:1px solid var(--line);border-radius:14px}}
+.cityHero{background:radial-gradient(circle at 50% 0%,rgba(139,92,246,.18),transparent 58%),linear-gradient(180deg,#121a2c,#0c1220);border-color:#394b70;text-align:center;padding:20px 14px}.cityIcon{font-size:58px;line-height:1;margin:4px 0 12px}.cityBuilding{min-height:86px;display:flex;flex-direction:column;justify-content:center}.cityBuilding .big{font-size:28px;line-height:1;margin-bottom:5px}.cityBuilding.locked{opacity:.58}.cityStatus{padding:10px 12px;border:1px solid #30405f;border-radius:11px;background:#0b1220;margin-top:8px}.combatResult{text-align:center;padding:18px 14px;margin-top:18px}.resultTitle{font-size:24px;font-weight:900;color:var(--good);margin-bottom:8px}.bossResult .resultTitle{color:#ffb84d}.resultLine{padding:10px 8px;margin:6px 0;background:#0c1424;border:1px solid #263752;border-radius:10px}.resultLine.good{color:#8df0a9}.nextBtn{font-size:19px;font-weight:900;padding:15px;margin-top:14px}
+select{font:inherit}
+.cityBuilding{border:1px solid var(--line);color:inherit}
+.resultLine{line-height:1.35}
+</style></head><body><div id="app"></div><script>
+'use strict';
+/* ============================================================
+   ХРОНИКИ БЕЗДНЫ — ONE FILE / SAFE PREVIEW BUILD
+   ============================================================ */
+/* ---------- Безопасное сохранение: Preview не ломает игру ---------- */
+const MEMORY={};
+const STORE={
+  ok:false,
+  init(){
+    try{
+      const s=window.localStorage;
+      const k='__abyss_probe__';
+      s.setItem(k,'1'); s.removeItem(k);
+      this.ok=true;
+    }catch(e){this.ok=false;}
+  },
+  get(k){
+    try{return this.ok?window.localStorage.getItem(k):(MEMORY[k]??null)}
+    catch(e){this.ok=false;return MEMORY[k]??null}
+  },
+  set(k,v){
+    try{if(this.ok){window.localStorage.setItem(k,v);return}}catch(e){this.ok=false}
+    MEMORY[k]=v;
+  },
+  del(k){
+    try{if(this.ok){window.localStorage.removeItem(k);return}}catch(e){this.ok=false}
+    delete MEMORY[k];
+  }
+};
+STORE.init();
+/* ---------- RNG ---------- */
+function hash(s){let h=2166136261>>>0;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function RNG(seed){
+  let a=hash(seed);
+  return {
+    next(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296},
+    int(n){return Math.floor(this.next()*n)},
+    pick(a){return a?.length?a[this.int(a.length)]:null},
+    chance(p){return this.next()<p}
+  }
+}
+let R=RNG('boot');
+/* ---------- Данные ---------- */
+const RARITY={
+  common:{name:'Обычный',mul:1},
+  uncommon:{name:'Необычный',mul:1.25},
+  rare:{name:'Редкий',mul:1.6},
+  epic:{name:'Эпический',mul:2.1},
+  legendary:{name:'Легендарный',mul:2.8}
+};
+const TAG={
+  martial:'⚔️ Воинственный',magic:'🔮 Магия',crit:'🎯 Крит',bleed:'🩸 Кровь',
+  poison:'☠️ Яд',burn:'🔥 Огонь',freeze:'❄️ Лёд',block:'🛡️ Блок',
+  combo:'⚡ Комбо',risk:'💀 Риск',curse:'☠️ Проклятие',gold:'🪙 Богатство',
+  summon:'👹 Призыв',heal:'💚 Лечение',support:'🤝 Поддержка',defense:'🛡️ Защита'
+};
+const CLASSES={
+  warrior:{name:'Воин',icon:'⚔️',hp:120,mp:42,atk:12,def:7,tags:['martial','bleed','block'],desc:'Блок, ярость, кровотечение. Стабильный фронтовик.',skills:['heavy','guard','rage']},
+  mage:{name:'Маг',icon:'🔮',hp:82,mp:68,atk:15,def:3,tags:['magic','burn','freeze'],desc:'Стихийные заклинания и контроль.',skills:['fire','frost','storm']},
+  rogue:{name:'Разбойник',icon:'🗡️',hp:94,mp:48,atk:14,def:4,tags:['crit','poison','combo'],desc:'Криты, яд, серии ударов и высокий риск.',skills:['flurry','venom','shadow']},
+  paladin:{name:'Паладин',icon:'🛡️',hp:132,mp:44,atk:11,def:9,tags:['block','defense','martial'],desc:'Стойкий защитник, превращающий оборону в силу.',skills:['guard','heavy','rage']},
+  warlock:{name:'Чернокнижник',icon:'🜏',hp:88,mp:72,atk:13,def:3,tags:['magic','poison','risk'],desc:'Тёмная магия, яд и рискованные усиления.',skills:['fire','venom','shadow']},
+  ranger:{name:'Следопыт',icon:'🏹',hp:100,mp:52,atk:15,def:4,tags:['crit','poison','combo'],desc:'Точный стрелок, играющий через критические серии.',skills:['flurry','venom','shadow']}
+};
+const SKILLS={
+  heavy:{name:'Тяжёлый удар',cost:8,tag:'bleed',tags:['bleed','martial'],desc:'1.65× атаки + кровотечение',base:1.65},
+  guard:{name:'Стойка',cost:7,tag:'block',tags:['block','defense'],desc:'+16 блока, +3 DEF на ход'},
+  rage:{name:'Ярость',cost:10,tag:'risk',tags:['risk','martial'],desc:'2.0× урон, теряешь 4% max HP',base:2},
+  fire:{name:'Огненный шар',cost:11,tag:'burn',tags:['burn','magic'],desc:'1.8× магический урон + горение',base:1.8},
+  frost:{name:'Ледяной импульс',cost:9,tag:'freeze',tags:['freeze','magic'],desc:'1.35× урон + замедление; шанс оглушить',base:1.35},
+  storm:{name:'Грозовой разряд',cost:14,tag:'magic',tags:['magic','burn'],desc:'2.15× урон; сильнее по горящей цели',base:2.15},
+  flurry:{name:'Шквал',cost:9,tag:'combo',tags:['combo','martial'],desc:'2 удара по 0.85×; +комбо',base:.85},
+  venom:{name:'Отравленный выпад',cost:8,tag:'poison',tags:['poison','martial'],desc:'1.25× + яд 4',base:1.25},
+  shadow:{name:'Теневой рывок',cost:12,tag:'crit',tags:['crit','combo'],desc:'1.55×; гарантированный крит при комбо ≥3',base:1.55}
+};
+const UPGRADES={
+  heavy:[
+    ['Рваная рана','+2 стака кровотечения',p=>p.up.heavyBleed=2],
+    ['Сокрушение','+25% урона по кровоточащим',p=>p.up.heavyVsBleed=.25]
+  ],
+  guard:[
+    ['Крепкая стойка','+8 блока',p=>p.up.guardBlock=8],
+    ['Контрудар','25% блока превращается в урон при атаке',p=>p.up.counter=.25]
+  ],
+  rage:[
+    ['Неистовство','стоимость HP снижена до 2%',p=>p.up.rageCost=.02],
+    ['На грани','+30% урона при HP <40%',p=>p.up.rageLow=.3]
+  ],
+  fire:[
+    ['Напалм','+2 горения',p=>p.up.fireBurn=2],
+    ['Пепел','+35% урона по горящей цели',p=>p.up.fireVsBurn=.35]
+  ],
+  frost:[
+    ['Холодная хватка','замедление +1 ход',p=>p.up.frostSlow=1],
+    ['Ледяная тюрьма','+20% шанс оглушить',p=>p.up.frostStun=.2]
+  ],
+  storm:[
+    ['Цепь','при горении +35% урона',p=>p.up.stormBurn=.35],
+    ['Перегрузка','+1 макс. маны каждый ход',p=>p.up.turnMana++]
+  ],
+  flurry:[
+    ['Разрез','каждый удар даёт +1 кровотечение',p=>p.up.flurryBleed=1],
+    ['Четвёртый удар','при комбо ≥4 следующий Шквал критует',p=>p.up.flurryCrit=true]
+  ],
+  venom:[
+    ['Токсин','+2 яда',p=>p.up.venom=2],
+    ['Гемотоксин','+30% урона по отравленным',p=>p.up.venomVs=.3]
+  ],
+  shadow:[
+    ['Тень','+5 блока после навыка',p=>p.up.shadowBlock=5],
+    ['Добивание','+50% урона по врагам <25% HP',p=>p.up.execute=.5]
+  ]
+};
+const ITEMS=[
+  {id:'iron',name:'Железный клинок',slot:'weapon',rarity:'common',tags:['martial'],atk:3,desc:'+3 атаки'},
+  {id:'hunter',name:'Клык охотника',slot:'weapon',rarity:'rare',tags:['crit','poison'],atk:4,crit:.08,desc:'+4 ATK, +8% крит'},
+  {id:'ember',name:'Жезл углей',slot:'weapon',rarity:'rare',tags:['magic','burn'],magic:5,desc:'+5 магии, огонь сильнее'},
+  {id:'voidblade',name:'Клинок Бездны',slot:'weapon',rarity:'legendary',tags:['martial','crit','risk'],atk:9,crit:.12,desc:'+9 ATK, +12% крит; после крита теряешь 2 HP'},
+  {id:'chain',name:'Кольчуга',slot:'armor',rarity:'common',tags:['defense','block'],def:3,desc:'+3 DEF'},
+  {id:'thorn',name:'Шипастая броня',slot:'armor',rarity:'rare',tags:['defense','bleed'],def:4,thorn:3,desc:'+4 DEF; атакующий получает 3 урона'},
+  {id:'mantle',name:'Мантия искр',slot:'armor',rarity:'epic',tags:['magic','burn'],def:2,magic:7,desc:'+7 магии, +2 DEF'},
+  {id:'boots',name:'Сапоги тени',slot:'accessory',rarity:'rare',tags:['crit','combo'],crit:.08,desc:'+8% крит'},
+  {id:'cursedBlade',name:'Проклятый клинок',slot:'weapon',rarity:'legendary',tags:['curse','risk','martial'],atk:12,curse:'blood',desc:'+12 ATK; в начале боя -6 HP'},
+  {id:'bloodCharm',name:'Кровавый талисман',slot:'accessory',rarity:'epic',tags:['bleed','risk'],atk:3,desc:'+3 ATK; кровотечение наносит +50%'},
+  {id:'greed',name:'Идол жадности',slot:'accessory',rarity:'legendary',tags:['gold','risk'],gold:35,desc:'+35% золота; враги +10% ATK'}
+];
+const RELICS=[
+  {id:'heart',name:'Сердце углей',rarity:'rare',tags:['burn','magic'],desc:'Каждый огненный эффект получает +1 стак.'},
+  {id:'fang',name:'Клык хищника',rarity:'rare',tags:['crit','combo'],desc:'После крита +1 комбо.'},
+  {id:'serpent',name:'Змеиное кольцо',rarity:'epic',tags:['poison'],desc:'Яд наносит на 40% больше урона.'},
+  {id:'aegis',name:'Осколок Эгиды',rarity:'rare',tags:['block','defense'],desc:'В начале боя +8 блока.'},
+  {id:'eye',name:'Око Бездны',rarity:'legendary',tags:['heal','risk'],desc:'Один раз за бой при HP ≤30% лечит 25% max HP и полностью восстанавливает MP.'},
+  {id:'mirror',name:'Зеркало Бездны',rarity:'legendary',tags:['curse','risk'],desc:'+7% урона за каждое проклятие.'},
+  {id:'pulse',name:'Пульс жизни',rarity:'epic',tags:['heal'],desc:'После элиты лечит 10% max HP.'},
+  {id:'idol',name:'Идол золота',rarity:'rare',tags:['gold'],desc:'+25% золота.'},
+  {id:'crown',name:'Корона падшего',rarity:'legendary',tags:['curse','risk'],desc:'При 2+ проклятиях +15% урона и +1 карта награды.'},
+  {id:'anchor',name:'Якорь',rarity:'epic',tags:['block','risk'],desc:'Защита даёт ещё +6 блока, но шанс побега -25%.'},
+  {id:'pyre',name:'Погребальный костёр',rarity:'legendary',tags:['burn','risk'],desc:'Горящие враги получают +25% общего урона.'},
+  {id:'venomCore',name:'Ядро токсина',rarity:'legendary',tags:['poison','crit'],desc:'Крит по отравленной цели продлевает яд на 2 хода.'}
+];
+const ENEMIES=[
+  {id:'scav',name:'Падальщик',hp:48,atk:9,def:2,gold:15,pattern:['attack','attack','bleed']},
+  {id:'slime',name:'Бездонная слизь',hp:65,atk:7,def:4,gold:19,pattern:['block','poison','attack']},
+  {id:'guardian',name:'Костяной страж',hp:90,atk:12,def:7,gold:28,pattern:['block','attack','attack']},
+  {id:'hunter',name:'Теневой охотник',hp:72,atk:14,def:3,gold:32,pattern:['crit','attack','poison']},
+  {id:'mage',name:'Искажённый маг',hp:66,atk:16,def:2,gold:36,pattern:['burn','attack','stun']},
+  {id:'vampire',name:'Кровопийца',hp:78,atk:13,def:4,gold:42,pattern:['attack','bleed','heal']},
+  {id:'shaman',name:'Шаман Бездны',hp:70,atk:11,def:3,gold:40,pattern:['summon','poison','block']},
+  {id:'assassin',name:'Безликий убийца',hp:58,atk:19,def:2,gold:45,pattern:['crit','attack','stun']}
+];
+const BOSSES=[
+  {id:'minotaur',name:'Минотавр Бездны',hp:250,atk:20,def:8,gold:120,phases:2,skills:['stomp','rage']},
+  {id:'devourer',name:'Пожиратель Искр',hp:230,atk:23,def:6,gold:135,phases:3,skills:['fire','heal','attack']},
+  {id:'queen',name:'Королева Теней',hp:215,atk:22,def:7,gold:150,phases:2,skills:['poison','crit','summon']},
+  {id:'lich',name:'Лич Пустоты',hp:240,atk:24,def:5,gold:165,phases:3,skills:['poison','heal','special']},
+  {id:'titan',name:'Титан Бездны',hp:290,atk:21,def:10,gold:180,phases:2,skills:['block','crit','special']}
+];
+const CURSES=[
+  {id:'blood',name:'Кровавый долг',desc:'В начале каждого боя -5 HP.'},
+  {id:'hunger',name:'Голод Бездны',desc:'После каждого боя теряешь 4 золота.'},
+  {id:'glass',name:'Стеклянная душа',desc:'Получаемый урон +20%.'},
+  {id:'silence',name:'Безмолвие',desc:'Максимальная мана -10.'},
+  {id:'mark',name:'Метка охоты',desc:'Элиты получают +15% ATK.'}
+];
+const EVENTS=[
+  {name:'Странник',desc:'Он предлагает сделку.',actions:[
+    ['💎 Реликвия + проклятие',()=>{giveRelic();addCurse();}],
+    ['🪙 -25 золота → +40 HP',()=>{if(S.gold>=25){S.gold-=25;heal(40)}else toast('Не хватает золота.')}],
+    ['🚪 Уйти',()=>{}]
+  ]},
+  {name:'Зеркальный зал',desc:'Отражение показывает путь к силе.',actions:[
+    ['🩸 -15 max HP → улучшить навык',()=>{S.p.max=Math.max(1,S.p.max-15);S.p.hp=Math.min(S.p.hp,S.p.max);upgradeRandomSkill()}],
+    ['🎲 Перероллить текущую награду',()=>{if(S.rewards)S.rewards=makeRewards(3)}],
+    ['🚪 Уйти',()=>{}]
+  ]},
+  {name:'Алтарь Бездны',desc:'Алтарь требует цену.',actions:[
+    ['❤️ -25 HP → +65 золота',()=>{if(S.p.hp>25){S.p.hp-=25;S.gold+=65}else toast('Слишком мало HP.')}],
+    ['☠️ Проклятие → эпическая реликвия',()=>{addCurse();giveRelic('epic')}],
+    ['🚪 Уйти',()=>{}]
+  ]},
+  {name:'Река теней',desc:'Вода может исцелить. Или отравить.',actions:[
+    ['💧 Выпить',()=>{if(R.chance(.65))heal(Math.floor(S.p.max*.35));else addStatus(S.p,'poison',3)}],
+    ['🪙 Бросить 20 золота → гарантированное лечение',()=>{if(S.gold>=20){S.gold-=20;heal(55)}else toast('Нет 20 золота.')}],
+    ['🚪 Уйти',()=>{}]
+  ]}
+];
+const SYNERGIES=[
+  {tag:'burn',need:3,name:'Пиромант',desc:'+15% урона по горящим',apply:p=>p.bonusBurn=.15},
+  {tag:'poison',need:3,name:'Отравитель',desc:'+15% урона по отравленным',apply:p=>p.bonusPoison=.15},
+  {tag:'bleed',need:3,name:'Мясник',desc:'+15% урона по кровоточащим',apply:p=>p.bonusBleed=.15},
+  {tag:'crit',need:3,name:'Палач',desc:'+10% общего урона после крита на ход',apply:p=>p.critTempo=.10},
+  {tag:'block',need:3,name:'Крепость',desc:'Защита +25% блока',apply:p=>p.blockMul=1.25},
+  {tag:'magic',need:3,name:'Арканист',desc:'+20% магического урона',apply:p=>p.magicMul=1.2},
+  {tag:'risk',need:3,name:'Авантюрист',desc:'+12% урона при HP <50%',apply:p=>p.riskMul=.12}
+];
+/* ---------- Meta ---------- */
+const META_KEY='abyss_meta_v3', SAVE_KEY='abyss_run_v3';
+const META_UP={
+  hp:{name:'Стойкость',max:5,cost:l=>10+l*15,desc:'+6 max HP за уровень'},
+  atk:{name:'Сила',max:5,cost:l=>12+l*18,desc:'+1 ATK за уровень'},
+  def:{name:'Закалка',max:5,cost:l=>10+l*15,desc:'+1 DEF за уровень'},
+  gold:{name:'Жадность',max:5,cost:l=>12+l*16,desc:'+5% золота'},
+  luck:{name:'Удача',max:5,cost:l=>15+l*20,desc:'+3% шанс редкого лута'},
+  life:{name:'Запасная жизнь',max:2,cost:l=>50+l*50,desc:'+1 возрождение'}
+};
+function metaLoad(){try{return JSON.parse(STORE.get(META_KEY)||'')||{points:0,levels:{},runs:0,wins:0,ach:{}}}catch(e){return{points:0,levels:{},runs:0,wins:0,ach:{}}}}
+function metaSave(m){STORE.set(META_KEY,JSON.stringify(m))}
+let META=metaLoad();
+/* ---------- State ---------- */
+function fresh(){
+  return {
+    screen:'city',cls:null,asc:0,seed:'',floor:1,gold:0,
+    p:null,map:[],node:null,rewards:null,event:null,shop:null,
+    combat:null,curses:[],relics:[],inventory:[],potions:3,skillLevels:{},
+    stats:{rooms:0,kills:0,elites:0,bosses:0,damage:0,gold:0,turns:0,crit:0,heals:0,forged:0,scrapped:0},
+    log:[],ended:false,
+    city:{level:1,visits:0,lastResult:null}
+  }
+}
+let S=fresh();
+/* ---------- State machine / transition control ---------- */
+const SCREEN_FLOW={
+  city:['city','start'],
+  start:['start','rules','city','map'],
+  rules:['start'],
+  map:['map','combat','reward','camp','shop','risk','event'],
+  combat:['combat','postcombat','defeat'],
+  postcombat:['postcombat','reward','victory'],
+  reward:['reward','map'],
+  camp:['camp','map'],
+  shop:['shop','map'],
+  risk:['risk','map','combat'],
+  event:['event','map','combat'],
+  victory:['victory','city'],
+  defeat:['defeat','city']
+};
+let LAST_TRANSITION=0;
+function setScreen(next){
+  const current=S.screen||'start';
+  if(current!==next && !(SCREEN_FLOW[current]||[]).includes(next)){
+    console.warn('Blocked invalid screen transition:',current,'->',next);
+    return false;
+  }
+  if(current===next)return true;
+  S.screen=next;
+  LAST_TRANSITION=Date.now();
+  save();
+  return true;
+}
+
+/* ---------- Возврат на предыдущий экран ---------- */
+function goBack(){
+  const back={
+    start:'city',
+    rules:'start',
+    map:'start',
+    combat:'map',
+    postcombat:'combat',
+    reward:'map',
+    camp:'map',
+    shop:'map',
+    risk:'map',
+    event:'map',
+    victory:'city',
+    defeat:'city',
+    character:'city',
+    training:'city',
+    forgeCity:'city',
+    merchant:'city',
+    codex:'city',
+    achievements:'city'
+  };
+  if(S.screen==='combat'||S.screen==='postcombat'||S.screen==='reward')return false;
+  const prev=back[S.screen];
+  if(!prev)return false;
+  S.screen=prev;
+  LAST_TRANSITION=Date.now();
+  save();
+  render();
+  return true;
+}
+/* ---------- Helpers ---------- */
+const clone=o=>JSON.parse(JSON.stringify(o));
+function player(){return S.p}
+function enemy(){return S.combat?.enemy}
+function toast(t){alert(t)}
+function addLog(t,type='sys'){S.log.push({t,type});if(S.log.length>40)S.log.shift()}
+function heal(n){const p=S.p,b=p.hp; p.hp=Math.min(p.max,p.hp+n);S.stats.heals+=p.hp-b;addLog('💚 Восстановлено '+(p.hp-b)+' HP','good')}
+function hasRelic(id){return S.relics.some(x=>x.id===id)}
+function hasItem(id){return S.inventory.some(x=>x.id===id)}
+function hasCurse(id){return S.curses.some(x=>x.id===id)}
+function addCurse(id){
+  const c=id?CURSES.find(x=>x.id===id):R.pick(CURSES);
+  if(!c||hasCurse(c.id)){if(id)return;return}
+  S.curses.push(clone(c));
+  if(c.id==='silence'&&S.p){S.p.maxmp=Math.max(10,S.p.maxmp-10);S.p.mp=Math.min(S.p.mp,S.p.maxmp)}
+  addLog('☠️ Проклятие: '+c.name,'warn')
+}
+function giveRelic(rarity){
+  let pool=RELICS.filter(x=>!hasRelic(x.id));
+  if(rarity)pool=pool.filter(x=>x.rarity===rarity);
+  if(!pool.length)pool=RELICS.filter(x=>!hasRelic(x.id));
+  if(!pool.length){S.gold+=60;return}
+  const r=clone(R.pick(pool));S.relics.push(r);addLog('💎 Получена реликвия: '+r.name,'good')
+}
+function addItem(item){
+  if(S.inventory.length>=24){toast('Инвентарь переполнен. Разбери предмет.');return false}
+  const copy=clone(item);applyItem(copy);S.inventory.push(copy);return true
+}
+function applyItem(it){
+  const p=S.p;if(!p)return;
+  const m=RARITY[it.rarity]?.mul||1;
+  const bonus={atk:Math.round((it.atk||0)*m),def:Math.round((it.def||0)*m),magic:(it.magic||0)*m,crit:it.crit||0};
+  it.__bonus=bonus;
+  p.atk+=bonus.atk;p.def+=bonus.def;p.magic+=bonus.magic;p.crit+=bonus.crit;
+}
+function rarityRoll(){
+  const luck=(META.levels.luck||0)*.03+S.asc*.005;
+  const x=R.next();
+  if(x<.03+luck)return'legendary';
+  if(x<.10+luck)return'epic';
+  if(x<.25+luck)return'rare';
+  if(x<.55)return'uncommon';
+  return'common'
+}
+function allTags(){
+  const out=[...(CLASSES[S.cls]?.tags||[])];
+  S.inventory.forEach(i=>out.push(...(i.tags||[])));
+  S.relics.forEach(i=>out.push(...(i.tags||[])));
+  return out
+}
+function tagCount(t){return allTags().filter(x=>x===t).length}
+function recomputeBuild(){
+  const p=S.p;
+  p.bonusBurn=0;p.bonusPoison=0;p.bonusBleed=0;p.critTempo=0;p.blockMul=1;p.magicMul=1;p.riskMul=0;
+  SYNERGIES.forEach(s=>{if(tagCount(s.tag)>=s.need)s.apply(p)})
+}
+function statusGet(t,type){return (t.statuses||[]).find(x=>x.type===type)}
+function addStatus(t,type,turns){
+  if(!t.statuses)t.statuses=[];
+  const old=statusGet(t,type);
+  if(old)old.turns=Math.max(old.turns,turns);
+  else t.statuses.push({type,turns});
+}
+function removeStatus(t,type){t.statuses=(t.statuses||[]).filter(x=>x.type!==type)}
+function hasStatus(t,type){return !!statusGet(t,type)}
+function statusText(t){
+  const names={burn:'🔥',poison:'☠️',bleed:'🩸',slow:'❄️',stun:'💫',fortify:'🛡️'};
+  return (t.statuses||[]).map(s=>`${names[s.type]||s.type} ${s.turns}`).join(' ')
+}
+function tickStatuses(t,isPlayer){
+  let out=[];
+  if(!t.statuses)return out;
+  for(const s of t.statuses){
+    let dmg=0;
+    if(s.type==='burn')dmg=3+(isPlayer?0:Math.floor(S.floor/2));
+    if(s.type==='poison')dmg=4+(isPlayer?0:Math.floor(S.floor/2));
+    if(s.type==='bleed')dmg=3;
+    if(dmg){
+      if(!isPlayer&&hasRelic('serpent')&&s.type==='poison')dmg=Math.floor(dmg*1.4);
+      if(!isPlayer&&hasRelic('bloodCharm')&&s.type==='bleed')dmg=Math.floor(dmg*1.5);
+      t.hp=Math.max(0,t.hp-dmg);out.push(`${s.type}: -${dmg}`)
+    }
+    s.turns--
+  }
+  t.statuses=t.statuses.filter(s=>s.turns>0);
+  return out
+}
+/* ---------- Player creation ---------- */
+function startRun(cls,asc,seed){
+  META=metaLoad();
+  S=fresh();S.cls=cls;S.asc=asc;S.seed=String(seed||'').trim()||('ABYSS-'+Date.now().toString(36).toUpperCase());R=RNG(S.seed);
+  const c=CLASSES[cls],ml=META.levels;
+  S.p={
+    hp:c.hp+(ml.hp||0)*6,max:c.hp+(ml.hp||0)*6,
+    mp:c.mp,maxmp:Math.max(10,c.mp-(hasCurse('silence')?10:0)),
+    atk:c.atk+(ml.atk||0),def:c.def+(ml.def||0),magic:0,crit:.08,
+    block:0,tempDef:0,combo:0,eye:false,up:{},bonusBurn:0,bonusPoison:0,bonusBleed:0,critTempo:0,blockMul:1,magicMul:1,riskMul:0,
+    extraLives:ml.life||0
+  };
+  S.gold=80;S.skills=clone(c.skills);S.skillLevels={};S.inventory=[];S.relics=[];S.curses=[];
+  if(hasCurse('silence'))S.p.maxmp=Math.max(10,S.p.maxmp-10);
+  S.p.mp=S.p.maxmp;
+  const starter=clone(ITEMS.find(x=>x.id==='iron'));addItem(starter);
+  generateMap();S.node=S.map[0].id;S.screen='start';setScreen('map');recomputeBuild();
+  addLog('♆ Ты входишь в Бездну. Seed: '+S.seed,'good');closeModal();save();render()
+}
+/* ---------- Map: real connected branching graph ---------- */
+const NODE_TYPES=['combat','combat','event','chest','camp','shop','risk','elite'];
+function generateMap(){
+  const floors=7,rows=3;
+  S.map=[];let prev=[];
+  for(let f=0;f<floors;f++){
+    const layer=[];
+    for(let r=0;r<rows;r++){
+      let type;
+      if(f===floors-1)type='boss';
+      else if(f===0)type='combat';
+      else{
+        const weights=f===6?['combat','elite','event','camp','risk']:NODE_TYPES;
+        type=R.pick(weights)
+      }
+      layer.push({id:`${f}-${r}`,f,r,type,links:[],used:false})
+    }
+    if(f>0){
+      for(const n of prev){
+        const choices=[n.r,Math.max(0,n.r-1),Math.min(rows-1,n.r+1)].filter((v,i,a)=>a.indexOf(v)===i);
+        R.pick(choices); // consume RNG deterministically
+      }
+    }
+    S.map.push(...layer);prev=layer;
+  }
+  // Connect each node to 1-2 adjacent nodes, then repair reachability.
+  for(let f=0;f<floors-1;f++){
+    const a=S.map.filter(n=>n.f===f),b=S.map.filter(n=>n.f===f+1);
+    for(const n of a){
+      const opts=b.filter(x=>Math.abs(x.r-n.r)<=1);
+      const shuffled=opts.slice().sort(()=>R.next()-.5);
+      const count=R.chance(.45)?1:2;
+      n.links=shuffled.slice(0,count).map(x=>x.id)
+    }
+    for(const target of b){
+      if(!a.some(n=>n.links.includes(target.id))){
+        const source=a.slice().sort((x,y)=>Math.abs(x.r-target.r)-Math.abs(y.r-target.r))[0];
+        source.links.push(target.id)
+      }
+    }
+  }
+  S.map.filter(n=>n.f===0).forEach((n,i)=>{if(i>0)n.type='combat'});
+}
+function currentNode(){return S.map.find(n=>n.id===S.node)}
+function availableNodes(){const n=currentNode();return n?S.map.filter(x=>n.links.includes(x.id)):[]}
+function chooseNode(id){
+  const n=availableNodes().find(x=>x.id===id);if(!n||n.used)return;
+  S.node=id;n.used=true;S.floor=n.f+1;S.stats.rooms++;enterNode(n);save();render()
+}
+function enterNode(n){
+  S.rewards=null;S.event=null;S.shop=null;
+  if(n.type==='combat'||n.type==='elite')startCombat(n.type==='elite');
+  else if(n.type==='boss')startBoss();
+  else if(n.type==='chest'){S.rewards=makeRewards(2);setScreen('reward')}
+  else if(n.type==='camp')setScreen('camp');
+  else if(n.type==='shop'){createShop();setScreen('shop')}
+  else if(n.type==='risk')setScreen('risk');
+  else if(n.type==='event'){S.event=cloneEvent(R.pick(EVENTS));setScreen('event')}
+}
+function cloneEvent(e){return {sourceIndex:EVENTS.indexOf(e),name:e.name,desc:e.desc,actions:e.actions.map(a=>[a[0],a[1]])}}
+/* ---------- Rewards ---------- */
+function makeRewards(count){
+  const out=[];let tries=0;
+  while(out.length<count&&tries++<200){
+    let kind=R.pick(['item','item','relic','skill']);
+    if(kind==='relic'&&!RELICS.some(x=>!hasRelic(x.id)))kind='item';
+    if(kind==='skill'&&S.skills.every(id=>(S.skillLevels[id]||0)>=2))kind='item';
+    let q;
+    if(kind==='item'){
+      const base=clone(R.pick(ITEMS.filter(x=>x.id!=='cursedBlade'||S.floor>=3)));
+      base.rarity=rarityRoll();q={type:'item',data:base}
+    }else if(kind==='relic'){
+      q={type:'relic',data:clone(R.pick(RELICS.filter(x=>!hasRelic(x.id))))}
+    }else{
+      const pool=S.skills.filter(id=>(S.skillLevels[id]||0)<2);q={type:'skill',data:R.pick(pool)}
+    }
+    if(!out.some(x=>x.type===q.type&&(x.type==='skill'?x.data===q.data:x.data.id===q.data.id)))out.push(q)
+  }
+  return out
+}
+function takeReward(i){
+  const q=S.rewards?.[i];if(!q||S.screen!=='reward')return;
+  if(q.type==='item'){if(!addItem(q.data))return;addLog('🎒 '+q.data.name,'good')}
+  if(q.type==='relic'){S.relics.push(clone(q.data));addLog('💎 '+q.data.name,'good')}
+  if(q.type==='skill')upgradeSkill(q.data);
+  recomputeBuild();S.rewards=null;setScreen('map');save();render()
+}
+/* ---------- Skills ---------- */
+function upgradeSkill(id){
+  const lv=S.skillLevels[id]||0;if(lv>=2){toast('Навык уже максимального уровня');return false}
+  S.skillLevels[id]=lv+1;const up=UPGRADES[id]?.[lv];if(up){up[2](S.p);addLog('🔧 '+SKILLS[id].name+': '+up[0],'good')}return true
+}
+function upgradeRandomSkill(){
+  const p=S.skills.filter(id=>(S.skillLevels[id]||0)<2);if(!p.length){toast('Все навыки максимальны');return false}
+  return upgradeSkill(R.pick(p))
+}
+/* ---------- Combat ---------- */
+function scaleEnemy(base,elite=false){
+  const scale=1+(S.floor-1)*.17+S.asc*.07+(elite?.28:0);
+  const e=clone(base);e.max=Math.round(e.hp*scale);e.hp=e.max;e.atk=Math.round(e.atk*scale);e.def=Math.round(e.def*scale);e.elite=elite;e.statuses=[];e.block=0;e.turn=0;e.intent='attack';
+  if(elite){
+    const mods=['Свирепый','Древний','Токсичный','Закалённый'];e.modifier=R.pick(mods);
+    if(e.modifier==='Свирепый')e.atk=Math.round(e.atk*1.25);
+    if(e.modifier==='Древний')e.max=e.hp=Math.round(e.max*1.35);
+    if(e.modifier==='Токсичный')e.poison=true;
+    if(e.modifier==='Закалённый')e.def+=5;
+  }
+  return e
+}
+function startCombat(elite=false){
+  const e=scaleEnemy(R.pick(ENEMIES),elite);S.combat={enemy:e,turn:1,over:false,boss:false};S.stats.elites+=elite?1:0;
+  const p=S.p;p.block=hasRelic('aegis')?8:0;p.tempDef=0;
+  if(hasCurse('blood')||S.inventory.some(x=>x.id==='cursedBlade')){p.hp=Math.max(1,p.hp-6);addLog('☠️ Цена проклятия: -6 HP','warn')}
+  if(hasRelic('idol')||S.inventory.some(x=>x.id==='greed'))e.atk=Math.ceil(e.atk*1.1);
+  if(elite&&hasCurse('mark'))e.atk=Math.ceil(e.atk*1.15);
+  setIntent();setScreen('combat');save();render()
+}
+function startBoss(){
+  const b=clone(R.pick(BOSSES)),scale=1+(S.floor-1)*.2+S.asc*.09;
+  b.max=b.hp=Math.round(b.hp*scale);b.atk=Math.round(b.atk*scale);b.def=Math.round(b.def*scale);b.phase=1;b.statuses=[];b.block=0;b.boss=true;b.turn=0;
+  S.combat={enemy:b,turn:1,over:false,boss:true};S.stats.bosses++;setScreen('combat');
+  S.p.block=hasRelic('aegis')?8:0;if(hasCurse('blood'))S.p.hp=Math.max(1,S.p.hp-6);setIntent();save();render()
+}
+function intentLabel(e){
+  const map={attack:'⚔️ Атака',block:'🛡️ Защита',bleed:'🩸 Кровь',poison:'☠️ Яд',burn:'🔥 Огонь',crit:'💥 Крит',stun:'💫 Оглушение',special:'💀 Особый удар',heal:'💚 Лечение',summon:'👹 Призыв',stomp:'💥 Топот',rage:'🔥 Ярость'};
+  return map[e.intent]||e.intent
+}
+function setIntent(){
+  const e=enemy();if(!e)return;
+  if(e.statuses?.some(x=>x.type==='stun')){e.intent='stunned';return}
+  if(e.boss){
+    const skills=e.skills||['attack','special'];
+    if(e.id==='minotaur')e.intent=R.pick(e.phase===1?['attack','stomp','block']:['attack','stomp','rage']);
+    else if(e.id==='devourer')e.intent=R.pick(e.phase===1?['attack','fire','heal']:['fire','attack','heal','special']);
+    else if(e.id==='queen')e.intent=R.pick(e.phase===1?['poison','crit','summon']:['poison','crit','summon','special']);
+    else if(e.id==='lich')e.intent=R.pick(e.phase===1?['poison','heal','special']:['poison','heal','special','attack']);
+    else if(e.id==='titan')e.intent=R.pick(e.phase===1?['block','attack','crit']:['block','crit','special','attack']);
+    else e.intent=R.pick(skills);
+  }else e.intent=e.pattern[(e.turn||0)%e.pattern.length]
+}
+function dmgCalc(att,def,mult=1,magic=false){
+  let m=mult;
+  if(magic)m*=att.magicMul||1;
+  if(hasStatus(att,'stun'))return 0;
+  if(hasStatus(att,'slow')&&att===S.p)m*=.9;
+  if(def.statuses){
+    if(hasStatus(def,'bleed')&&att===S.p)m*=1+(S.p.bonusBleed||0);
+    if(hasStatus(def,'poison')&&att===S.p)m*=1+(S.p.bonusPoison||0);
+    if(hasStatus(def,'burn')&&att===S.p)m*=1+(S.p.bonusBurn||0);
+    if(hasRelic('pyre')&&hasStatus(def,'burn')&&att===S.p)m*=1.25;
+  }
+  if(att===S.p&&S.p.hp/S.p.max<.5)m*=1+(S.p.riskMul||0);
+  if(att===S.p&&hasRelic('mirror'))m*=1+(S.curses.length*.07);
+  if(att===S.p&&hasRelic('crown')&&S.curses.length>=2)m*=1.15;
+  let raw=(magic?(att.atk+att.magic):att.atk)*m-(def.def+((def===S.p)?S.p.tempDef:0))*.52;
+  return Math.max(1,Math.floor(raw+R.next()*5-2))
+}
+/* ---------- Локальная защита игровых действий ---------- */
+/* Не перехватывает события кнопок. Защита выполняется только
+   внутри действий, поэтому обычные Android/WebView-нажатия
+   не блокируются. */
+function playerAttack(){
+  if(!canAct())return;const p=S.p,e=enemy();let mult=1;
+  if(hasRelic('void'))mult*=1;
+  let crit=R.chance(Math.min(.75,p.crit+(p.critTempo||0)+(p.combo>=3?.03:0)));
+  let d=dmgCalc(p,e,mult);if(crit){d=Math.floor(d*1.8);S.stats.crit++;p.combo++;if(hasRelic('fang'))p.combo++;p.critTempo=p.critTempo||0;p.critTempo=.10}
+  if((hasItem('voidblade'))&&crit){p.hp=Math.max(1,p.hp-2);addLog('🩸 Клинок Бездны требует кровь','warn')}
+  if((hasItem('cursedBlade'))&&crit){p.hp=Math.max(1,p.hp-2)}
+  if(crit&&hasRelic('venomCore')&&hasStatus(e,'poison')){const st=statusGet(e,'poison');st.turns+=2;addLog('☠️ Ядро токсина продлевает яд','good')}
+  dealPlayerDamage(d,crit?'КРИТ!':'Обычная атака');endPlayerTurn()
+}
+function useSkill(id){
+  if(!canAct())return;const p=S.p,e=enemy(),sk=SKILLS[id],lv=S.skillLevels[id]||0;
+  if(!sk||p.mp<sk.cost){toast('Недостаточно MP');return}p.mp-=sk.cost;let text='',d=0;
+  if(id==='heavy'){d=dmgCalc(p,e,sk.base);if(hasStatus(e,'bleed'))d=Math.floor(d*(1+(p.up.heavyVsBleed||0)));dealPlayerDamage(d,'Тяжёлый удар');addStatus(e,'bleed',3+(p.up.heavyBleed||0))}
+  else if(id==='guard'){p.block+=Math.floor((16+(p.up.guardBlock||0))*(p.blockMul||1));p.tempDef=3;addLog('🛡️ Стойка: +'+p.block+' блока','good')}
+  else if(id==='rage'){const cost=Math.ceil(p.max*(p.up.rageCost||.04));p.hp=Math.max(1,p.hp-cost);d=dmgCalc(p,e,2);if(p.hp/p.max<.4)d=Math.floor(d*(1+(p.up.rageLow||0)));dealPlayerDamage(d,'Ярость')}
+  else if(id==='fire'){d=dmgCalc(p,e,sk.base,true);if(hasStatus(e,'burn'))d=Math.floor(d*1.1);dealPlayerDamage(d,'Огненный шар');addStatus(e,'burn',3+(p.up.fireBurn||0)+(hasRelic('heart')?1:0))}
+  else if(id==='frost'){d=dmgCalc(p,e,sk.base);dealPlayerDamage(d,'Ледяной импульс');addStatus(e,'slow',2+(p.up.frostSlow||0));if(R.chance(.25+(p.up.frostStun||0)))addStatus(e,'stun',1)}
+  else if(id==='storm'){d=dmgCalc(p,e,sk.base,true);if(hasStatus(e,'burn'))d=Math.floor(d*(1+(p.up.stormBurn||0)));dealPlayerDamage(d,'Грозовой разряд')}
+  else if(id==='flurry'){for(let i=0;i<2;i++){d=dmgCalc(p,e,.85);if(p.combo>=4&&p.up.flurryCrit)d=Math.floor(d*1.8);dealPlayerDamage(d,'Шквал');if(e.hp<=0)break; if(p.up.flurryBleed)addStatus(e,'bleed',2)}p.combo++}
+  else if(id==='venom'){d=dmgCalc(p,e,sk.base);if(hasStatus(e,'poison'))d=Math.floor(d*(1+(p.up.venomVs||0)));dealPlayerDamage(d,'Отравленный выпад');addStatus(e,'poison',4+(p.up.venom||0))}
+  else if(id==='shadow'){d=dmgCalc(p,e,sk.base);if(p.combo>=3)d=Math.floor(d*1.8);if(p.up.execute&&e.hp/e.max<.25)d=Math.floor(d*(1+p.up.execute));dealPlayerDamage(d,'Теневой рывок');p.block+=p.up.shadowBlock||0}
+  if(e.hp>0)endPlayerTurn();else winCombat()
+}
+function dealPlayerDamage(d,label){
+  const e=enemy(),p=S.p;
+  const blocked=Math.min(e.block||0,d);
+  if(blocked)e.block=Math.max(0,(e.block||0)-blocked);
+  const dealt=Math.max(0,d-blocked);
+  e.hp=Math.max(0,e.hp-dealt);S.stats.damage+=dealt;p.combo=Math.min(9,p.combo+1);
+  addLog('⚔️ '+label+': <b>'+dealt+'</b> урона'+(blocked?' ('+blocked+' заблокировано)':''),'combat')
+}
+function usePotion(){
+  if(!canAct())return;
+  const p=S.p;
+  if((p.hp||0)>=p.max){toast('HP уже полностью восстановлено');return}
+  if((S.potions||0)<=0){toast('Зелья закончились');return}
+  const before=p.hp;
+  const amount=Math.floor(p.max*.30);
+  p.hp=Math.min(p.max,p.hp+amount);
+  S.stats.heals+=(p.hp-before);
+  S.potions--;
+  addLog('🧪 Зелье лечения: +'+(p.hp-before)+' HP','good');
+  endPlayerTurn();
+}
+function defend(){
+  if(!canAct())return;const p=S.p;let b=Math.floor((8+Math.round(p.def*.8))*(p.blockMul||1));if(hasRelic('anchor'))b+=6;p.block+=b;p.mp=Math.min(p.maxmp,p.mp+5);addLog('🛡️ Защита: +'+b+' блока','good');endPlayerTurn()
+}
+function canAct(){return S.screen==='combat'&&S.combat&&!S.combat.over&&!enemy()?.hp?false:!!(S.screen==='combat'&&S.combat&&!S.combat.over&&enemy()?.hp>0)}
+function endPlayerTurn(){
+  if(enemy().hp<=0){winCombat();return}
+  enemyTurn();if(S.p.hp<=0){loseRun();return}
+  const st=tickStatuses(enemy(),false);if(st.length)addLog('☠️ '+st.join(', '),'combat');
+  const pst=tickStatuses(S.p,true);if(pst.length)addLog('☠️ '+pst.join(', '),'warn');
+  if(enemy().hp<=0){winCombat();return}
+  S.p.mp=Math.min(S.p.maxmp,S.p.mp+1+(S.p.up.turnMana||0));S.p.tempDef=0;S.p.critTempo=Math.max(0,(S.p.critTempo||0)-.05);S.p.combo=Math.max(0,S.p.combo-1);
+  S.combat.turn++;S.stats.turns++;setIntent();checkEye();save();render()
+}
+function enemyAttack(mult=1,forceCrit=false){
+  const e=enemy(),p=S.p;if(hasStatus(e,'stun'))return;
+  if(hasStatus(e,'slow'))mult*=.9;
+  let d=dmgCalc(e,p,mult);if(forceCrit||R.chance(.08+S.floor*.01))d=Math.floor(d*1.6);
+  let block=Math.min(p.block,d);p.block-=block;d-=block;
+  if(hasCurse('glass'))d=Math.ceil(d*1.2);
+  p.hp=Math.max(0,p.hp-d);addLog('💥 '+e.name+' наносит '+d+' урона'+(block?' ('+block+' заблокировано)':''),'combat');
+  if(e.poison&&R.chance(.45))addStatus(p,'poison',3);
+  if(hasItem('thorn')&&d>0){const thorn=S.inventory.find(x=>x.id==='thorn');const reflect=thorn.thorn||3;e.hp=Math.max(0,e.hp-reflect);S.stats.damage+=reflect;addLog('🌵 Шипастая броня: -'+reflect+' HP врагу','combat')}
+}
+function enemyTurn(){
+  const e=enemy();if(!e)return;
+  if(e.intent==='block'){e.block+=Math.floor(10+e.def*.7);addLog('🛡️ '+e.name+' укрепляется','combat')}
+  else if(e.intent==='bleed'){enemyAttack(.9);addStatus(S.p,'bleed',3)}
+  else if(e.intent==='poison'){enemyAttack(.9);addStatus(S.p,'poison',3)}
+  else if(e.intent==='burn'){enemyAttack(.95);addStatus(S.p,'burn',3)}
+  else if(e.intent==='crit'){enemyAttack(1.2,true)}
+  else if(e.intent==='stun'){enemyAttack(.85);if(R.chance(.4))addStatus(S.p,'stun',1)}
+  else if(e.intent==='heal'){e.hp=Math.min(e.max, e.hp+Math.floor(e.max*.15));addLog('💚 '+e.name+' лечится','combat')}
+  else if(e.intent==='special'){enemyAttack(e.boss?1.45:1.25,true);if(e.boss)addStatus(S.p,e.phase>=2?'burn':'poison',3)}
+  else if(e.intent==='summon'){
+    enemyAttack(.8);
+    if(e.boss&&e.id==='queen'){e.atk=Math.ceil(e.atk*1.05);addLog('👥 Королева Теней призывает теней: её атака растёт','combat')}
+    else{e.hp=Math.min(e.max,e.hp+Math.floor(e.max*.1));addLog('👹 '+e.name+' восстанавливает силы','combat')}
+  }
+  else if(e.intent==='stomp'&&e.boss){enemyAttack(1.1);if(R.chance(.5))addStatus(S.p,'stun',1);addLog('💥 Минотавр сотрясает землю','combat')}
+  else if(e.intent==='rage'&&e.boss){enemyAttack(e.hp/e.max<.5?1.8:1.35,true);addLog('🔥 Минотавр впадает в ярость','combat')}
+  else if(e.intent==='fire'&&e.boss){enemyAttack(.95);addStatus(S.p,'burn',3);addLog('🔥 Пожиратель Искр обжигает тебя','combat')}
+  else enemyAttack(1);
+  if(e.boss){
+    const hp=e.hp/e.max;
+    if(e.phase===1&&hp<=.66){e.phase=2;e.atk=Math.ceil(e.atk*1.15);e.def+=2;addLog('🔥 Фаза II: '+e.name+' приходит в ярость!','warn')}
+    if(e.phase===2&&e.phases>=3&&hp<=.33){e.phase=3;e.atk=Math.ceil(e.atk*1.18);addLog('🌌 Фаза III: Бездны становится слишком много...','warn')}
+  }
+}
+function checkEye(){
+  const p=S.p;if(hasRelic('eye')&&!p.eye&&p.hp/p.max<=.3){p.eye=true;heal(Math.floor(p.max*.25));p.mp=p.maxmp;addLog('👁️ Око Бездны спасает тебя!','good')}
+}
+function winCombat(){
+  if(S.combat.over)return;S.combat.over=true;const e=enemy();
+  let gold=Math.round(e.gold*(1+(META.levels.gold||0)*.05));
+  if(hasRelic('idol')||S.inventory.some(x=>x.id==='greed'))gold=Math.round(gold*1.25);
+  S.gold+=gold;S.stats.gold+=gold;S.stats.kills++;
+  if(hasCurse('hunger'))S.gold=Math.max(0,S.gold-4);
+  if(e.elite&&hasRelic('pulse'))heal(Math.floor(S.p.max*.1));
+  if(e.boss){
+    META.points+=15+S.floor*3;META.wins++;META.runs++;metaSave(META);S.ended=true;S.city.lastResult={type:'victory',floor:S.floor,gold:S.stats.gold||0};
+    addLog('👑 БОСС ПОВЕРЖЕН!','good');
+    S.postCombat={boss:true,name:e.name,gold:gold,elite:!!e.elite};
+  }else{
+    addLog('🏆 '+e.name+' повержен! +'+gold+' золота','good');
+    S.rewards=makeRewards(hasRelic('crown')&&S.curses.length>=2?4:3);
+    S.postCombat={boss:false,name:e.name,gold:gold,elite:!!e.elite};
+  }
+  setScreen('postcombat');save();render()
+}
+function continueAfterCombat(){
+  if(S.screen!=='postcombat')return;
+  if(S.postCombat?.boss){S.postCombat=null;setScreen('victory');save();render();return}
+  S.postCombat=null;setScreen('reward');save();render()
+}
+function loseRun(){
+  if(S.p.extraLives>0){S.p.extraLives--;S.p.hp=S.p.max;S.p.mp=S.p.maxmp;S.p.statuses=[];addLog('✨ Запасная жизнь!','good');setScreen('combat');save();render();return}
+  S.stats.rooms=Math.max(S.stats.rooms,0);META.points+=Math.max(1,Math.floor(S.floor*2));META.runs++;metaSave(META);S.city.lastResult={type:'defeat',floor:S.floor,gold:S.stats.gold||0};setScreen('defeat');S.ended=true;save();render()
+}
+/* ---------- Camp / Forge / Shop / Risk / Events ---------- */
+function campRest(){heal(Math.floor(S.p.max*.35));leaveRoom()}
+function campMana(){S.p.mp=S.p.maxmp;addLog('💧 MP полностью восстановлена','good');leaveRoom()}
+function campUpgrade(){if(upgradeRandomSkill())leaveRoom()}
+function forgeItem(i){
+  const it=S.inventory[i];if(!it)return;if(it.rarity==='legendary'){toast('Легендарный предмет уже максимален');return}
+  const order=['common','uncommon','rare','epic','legendary'],idx=order.indexOf(it.rarity),cost=25+idx*20;
+  if(S.gold<cost){toast('Нужно '+cost+' золота');return}S.gold-=cost;it.rarity=order[idx+1];
+  it.__bonus=it.__bonus||{atk:0,def:0,magic:0,crit:0};
+  if(it.atk){S.p.atk+=1;it.__bonus.atk+=1}if(it.def){S.p.def+=1;it.__bonus.def+=1}if(it.magic){S.p.magic+=1;it.__bonus.magic+=1}S.stats.forged++;addLog('🔨 '+it.name+' улучшен','good');save();render()
+}
+function scrapItem(i){
+  const it=S.inventory[i];if(!it)return;
+  const val={common:10,uncommon:16,rare:24,epic:36,legendary:60}[it.rarity]||10;
+  const b=it.__bonus||{atk:Math.round((it.atk||0)*(RARITY[it.rarity]?.mul||1)),def:Math.round((it.def||0)*(RARITY[it.rarity]?.mul||1)),magic:(it.magic||0)*(RARITY[it.rarity]?.mul||1),crit:it.crit||0};
+  S.p.atk=Math.max(0,S.p.atk-(b.atk||0));S.p.def=Math.max(0,S.p.def-(b.def||0));S.p.magic=Math.max(0,S.p.magic-(b.magic||0));S.p.crit=Math.max(0,S.p.crit-(b.crit||0));
+  S.inventory.splice(i,1);S.gold+=val;S.stats.scrapped++;recomputeBuild();addLog('♻️ Разобрано: +'+val+' золота','good');save();render()
+}
+function createShop(){
+  const q=makeRewards(5);S.shop=q.map(x=>({...x,price:x.type==='relic'?75:x.type==='skill'?55:({common:30,uncommon:42,rare:60,epic:85,legendary:125}[x.data.rarity]||30)}))
+}
+function buy(i){
+  const q=S.shop?.[i];
+  if(!q)return;
+  if(S.gold<q.price){toast('Недостаточно золота');return}
+  // Check capacity BEFORE charging the player.
+  if(q.type==='item' && S.inventory.length>=24){
+    toast('Инвентарь переполнен. Сначала освободи место.');
+    return;
+  }
+  if(q.type==='skill' && (S.skillLevels[q.data]||0)>=2){
+    toast('Этот навык уже максимального уровня');
+    return;
+  }
+  S.gold-=q.price;
+  let ok=true;
+  if(q.type==='relic')S.relics.push(clone(q.data));
+  else if(q.type==='skill')ok=upgradeSkill(q.data);
+  else ok=addItem(q.data);
+  if(!ok){S.gold+=q.price;return;}
+  S.shop.splice(i,1);
+  recomputeBuild();
+  save();render()
+}
+function riskChoice(kind){
+  if(kind==='relic'){S.p.hp=Math.max(1,S.p.hp-20);S.gold+=35;giveRelic();addCurse('blood')}
+  if(kind==='gold'){S.gold+=80;S.p.max=Math.max(1,S.p.max-12);S.p.hp=Math.min(S.p.hp,S.p.max)}
+  if(kind==='elite'){setScreen('combat');startCombat(true);return}
+  leaveRoom()
+}
+function eventAction(i){
+  const a=S.event?.actions?.[i];if(!a)return;a[1]();S.event=null;setScreen('map');save();render()
+}
+function leaveRoom(){setScreen('map');save();render()}
+/* ---------- UI ---------- */
+function header(){
+  if(!S.p)return `<header><div class="logo">♆ Хроники Бездны</div><div class="sub">Mobile Roguelike • Build • Risk • Synergy</div></header>`;
+  const p=S.p;return `<header><div class="top"><div><div class="logo">♆ Хроники Бездны</div><div class="sub">${S.screen==='city'?'🏙️ Город Предела':(S.cls?CLASSES[S.cls].name:'')} • ${S.screen==='city'?'Готов к походу':'Этаж '+S.floor+' • A'+S.asc+' • '+S.seed}</div></div><div style="display:flex;gap:5px;align-items:center">${S.screen!=='city'?'<button class="btn" style="width:auto;margin:0;padding:8px 11px" onclick="goBack()">←</button>':''}<button class="btn" style="width:auto;margin:0;padding:8px 11px" onclick="menu()">☰</button></div></div><div class="stats"><div class="stat">❤️<b>${Math.ceil(p.hp)}/${p.max}</b></div><div class="stat">💧<b>${Math.ceil(p.mp)}/${p.maxmp}</b></div><div class="stat">🪙<b>${S.gold}</b></div><div class="stat">☠️<b>${S.curses.length}</b></div></div></header>`
+}
+function tagsHTML(tags){return (tags||[]).map(t=>`<span class="badge">${TAG[t]||t}</span>`).join('')}
+function normalizeTags(obj){if(!obj)return[];if(Array.isArray(obj.tags))return obj.tags;return obj.tag?[obj.tag]:[]}
+function hasTag(obj,tag){return normalizeTags(obj).includes(tag)}
+function tagsOf(obj){return normalizeTags(obj).slice()}
+function addTag(obj,tag){if(!obj)return obj;if(!Array.isArray(obj.tags))obj.tags=normalizeTags(obj);if(!obj.tags.includes(tag))obj.tags.push(tag);return obj}
+function collectBuildTags(){
+  const out=new Set();
+  if(S.cls&&CLASSES[S.cls])CLASSES[S.cls].tags.forEach(t=>out.add(t));
+  (S.inventory||[]).forEach(x=>normalizeTags(x).forEach(t=>out.add(t)));
+  (S.relics||[]).forEach(x=>normalizeTags(x).forEach(t=>out.add(t)));
+  Object.keys(S.skillLevels||{}).forEach(id=>{if((S.skillLevels[id]||0)>0&&SKILLS[id])normalizeTags(SKILLS[id]).forEach(t=>out.add(t));});
+  (S.allies||[]).forEach(x=>normalizeTags(x).forEach(t=>out.add(t)));
+  return [...out];
+}
+function hasBuildTag(tag){return collectBuildTags().includes(tag)}
+function buildTagCounts(){
+  const out={};
+  const add=obj=>normalizeTags(obj).forEach(t=>out[t]=(out[t]||0)+1);
+  if(S.cls&&CLASSES[S.cls])add(CLASSES[S.cls]);
+  (S.inventory||[]).forEach(add);(S.relics||[]).forEach(add);
+  Object.keys(S.skillLevels||{}).forEach(id=>{if((S.skillLevels[id]||0)>0&&SKILLS[id])add(SKILLS[id]);});
+  (S.allies||[]).forEach(add);
+  return out;
+}
+function rewardHTML(q,i){
+  let title='',desc='',rar='';
+  if(q.type==='skill'){const s=SKILLS[q.data],lv=S.skillLevels[q.data]||0;title='🔧 '+s.name+' → уровень '+(lv+1);desc=s.desc;rar='accent'}
+  else{const d=q.data;title=(q.type==='relic'?'💎 ':'🎒 ')+d.name;desc=d.desc;rar='rar-'+d.rarity}
+  return `<button class="reward" onclick="takeReward(${i})"><strong class="${rar}">${title}</strong><div class="small muted">${desc}</div>${q.data.tags?tagsHTML(q.data.tags):''}</button>`
+}
+function mapScreen(){
+  const av=availableNodes(),icons={combat:'⚔️',elite:'☠️',event:'❓',chest:'🎁',camp:'🔥',shop:'🛒',risk:'💀',boss:'👑'};
+  return `<div class="card"><h2>🗺️ Карта</h2><div class="muted small">Выбирай только связанные узлы. Прошлый путь закрыт.</div><div class="nodegrid">${S.map.map(n=>`<button class="node ${av.some(x=>x.id===n.id)?'can':''} ${n.id===S.node?'current':''} ${n.type==='boss'?'boss':''}" ${av.some(x=>x.id===n.id)?`onclick="chooseNode('${n.id}')"`:''}><b>${icons[n.type]}</b><br>${n.type}<br><span class="small">F${n.f+1}</span></button>`).join('')}</div></div><div class="card"><h3>⚡ Синергии</h3>${synergyHTML()}</div><div class="card"><h3>💎 Реликвии</h3>${S.relics.length?S.relics.map(r=>`<div class="item"><b class="rar-${r.rarity}">${r.name}</b><div class="small muted">${r.desc}</div>${tagsHTML(r.tags)}</div>`).join(''):'<span class="muted">Пока нет.</span>'}</div><div class="card"><h3>🎒 Снаряжение</h3>${inventoryHTML()}</div><div class="card"><h3>☠️ Проклятия</h3>${S.curses.length?S.curses.map(c=>`<div class="item"><b class="bad">${c.name}</b><div class="small muted">${c.desc}</div></div>`).join(''):'<span class="muted">Нет проклятий.</span>'}</div><div class="card"><h3>📜 Журнал</h3>${S.log.slice(-8).map(l=>`<div class="log ${l.type}">${l.t}</div>`).join('')}</div>`
+}
+function synergyHTML(){
+  recomputeBuild();let h='';
+  for(const s of SYNERGIES){const n=tagCount(s.tag);h+=`<div class="item"><b>${s.name} ${n>=s.need?'⚡ АКТИВНА':''}</b><div class="small muted">${TAG[s.tag]||s.tag}: ${n}/${s.need} — ${s.desc}</div></div>`}
+  return h
+}
+function inventoryHTML(){
+  if(!S.inventory.length)return '<span class="muted">Пусто.</span>';
+  return S.inventory.map((it,i)=>`<div class="item"><div class="row"><b class="rar-${it.rarity}">${it.name}</b><span class="pill">${RARITY[it.rarity].name}</span></div><div class="small muted">${it.desc}</div>${tagsHTML(it.tags)}<div class="grid2"><button class="btn" onclick="forgeItem(${i})">🔨 Кузница</button><button class="btn dangerBtn" onclick="scrapItem(${i})">♻️ Разобрать</button></div></div>`).join('')
+}
+function combatScreen(){
+  const p=S.p,e=enemy();if(!e)return '';
+  return `<div class="card"><div class="row"><h2>${e.boss?'👑 ':e.elite?'☠️ ':''}${e.name}</h2><span class="pill">${e.boss?'Фаза '+e.phase:e.elite?e.modifier:'Обычный'}</span></div><div class="bar hp"><i style="width:${Math.max(0,e.hp/e.max*100)}%"></i></div><div class="small">${Math.ceil(e.hp)} / ${e.max} HP</div><div class="intent">Намерение: <b>${e.intent==='stunned'?'💫 Оглушён':intentLabel(e)}</b></div>${statusHTML(e)}
+  </div><div class="fight"><div class="fighter"><h3>🧙 ${CLASSES[S.cls].name}</h3><div>⚔️ ${p.atk} • 🛡️ ${p.def} • 🔮 ${p.magic}</div><div>🧱 Блок: ${p.block}</div><div>⚡ Комбо: ${p.combo}</div>${statusHTML(p)}</div><div class="fighter"><h3>👹 Враг</h3><div>⚔️ ${e.atk} • 🛡️ ${e.def}</div><div>🩸 ${e.statuses?.length||0} эффектов</div></div></div><div class="card"><h3>Действия</h3><div class="grid2"><button class="btn primary" onclick="playerAttack()">⚔️ Атака</button><button class="btn goodBtn" onclick="defend()">🛡️ Защита</button></div><button class="btn" onclick="usePotion()" ${S.potions<=0||p.hp>=p.max?'disabled':''}>🧪 Зелье лечения ×${S.potions}<br><span class="small muted">Восстанавливает 30% max HP • занимает ход</span></button>
+  ${S.skills.map(id=>{const s=SKILLS[id],lv=S.skillLevels[id]||0;return `<button class="btn" onclick="useSkill('${id}')" ${p.mp<s.cost?'disabled':''}>${s.name} • ${s.cost} MP • Lv.${lv+1}<br><span class="small muted">${s.desc}</span></button>`}).join('')}
+  </div>`
+}
+function statusHTML(t){return t.statuses?.length?`<div class="statuses">${t.statuses.map(s=>`<span class="status">${s.type}:${s.turns}</span>`).join('')}</div>`:''}
+function campScreen(){return `<div class="card"><h2>🔥 Костёр</h2><p class="muted">Одно действие. Выбери, что важнее сейчас.</p><button class="btn goodBtn" onclick="campRest()">❤️ Отдохнуть: +35% HP</button><button class="btn" onclick="campMana()">💧 Медитировать: полное MP</button><button class="btn" onclick="campUpgrade()">🔧 Улучшить случайный навык</button><button class="btn" onclick="leaveRoom()">🚪 Уйти</button></div>`}
+function postCombatScreen(){
+  const q=S.postCombat||{};
+  return `<div class="card combatResult ${q.boss?'bossResult':''}"><div class="resultTitle">${q.boss?'👑 БОСС ПОВЕРЖЕН':'🏆 ПОБЕДА'}</div><h2>${q.name||'Враг'} повержен!</h2><div class="resultLine">🪙 Получено <b>${q.gold||0} золота</b></div>
+    ${q.elite?'<div class="resultLine">☠️ Элитный враг — награда повышена</div>':''}
+    ${q.boss?'<div class="resultLine good">🌌 Путь открыт. Бездна ведёт тебя дальше.</div>':'<div class="resultLine">🎁 За победу тебя ждёт награда.</div>'}
+    <button class="btn primary nextBtn" onclick="continueAfterCombat()">Идти дальше →</button></div>`
+}
+function rewardScreen(title='🏆 Награда'){return `<div class="card"><h2>${title}</h2><p class="muted">Выбери ОДНУ награду. После выбора остальные исчезнут.</p>${S.rewards?.map(rewardHTML).join('')||'<div class="muted">Наград пока нет.</div>'}</div>`}
+function shopScreen(){return `<div class="card"><h2>🛒 Магазин</h2><div class="muted">Купить можно один или несколько предметов, пока хватает золота.</div>${S.shop?.map((q,i)=>`<button class="reward" onclick="buy(${i})"><strong>${q.type==='relic'?'💎 ':q.type==='skill'?'🔧 ':'🎒 '}${q.data.name||SKILLS[q.data].name} <span class="gold">— ${q.price}🪙</span></strong><div class="small muted">${q.data.desc||SKILLS[q.data].desc}</div></button>`).join('')}<button class="btn" onclick="leaveRoom()">🚪 Покинуть магазин</button></div>`}
+function riskScreen(){return `<div class="card"><h2>💀 Комната риска</h2><p class="muted">Сила почти всегда имеет цену.</p><button class="btn dangerBtn" onclick="riskChoice('relic')">💎 -20 HP + 35 золота → случайная реликвия + проклятие</button><button class="btn" onclick="riskChoice('gold')">🪙 +80 золота → -12 max HP</button><button class="btn dangerBtn" onclick="riskChoice('elite')">☠️ Немедленно сразиться с элитой → двойная награда</button><button class="btn" onclick="leaveRoom()">🚪 Уйти</button></div>`}
+function eventScreen(){return `<div class="card"><h2>❓ ${S.event.name}</h2><p class="muted">${S.event.desc}</p>${S.event.actions.map((a,i)=>`<button class="btn choice" onclick="eventAction(${i})">${a[0]}</button>`).join('')}</div>`}
+function endScreen(win){
+  if(win){
+    if(S.cls==='paladin')awardAchievement('classPaladin');
+    if(S.cls==='warlock')awardAchievement('classWarlock');
+    if(S.cls==='ranger')awardAchievement('classRanger');
+    if(BOSSES.every(b=>(META.codex||{})[b.id]))awardAchievement('boss5');
+  }
+  const st=S.stats;return `<div class="card" style="text-align:center"><h1>${win?'🏆 ПОБЕДА':'☠️ ЗАБЕГ ОКОНЧЕН'}</h1><p class="muted">${win?'Сердце Бездны пало.':'Бездьма забрала тебя.'}</p><hr><div class="statGrid"><div class="stat">Этаж<b>${S.floor}</b></div><div class="stat">Убито<b>${st.kills}</b></div><div class="stat">Урон<b>${st.damage}</b></div><div class="stat">Золото<b>${st.gold}</b></div></div><button class="btn primary" onclick="newRun()">🏙️ Вернуться в город</button><button class="btn" onclick="showMeta()">🌌 Мета-прогрессия</button></div>`}
+function showRules(){
+  openModal(`<h2>📜 Правила игры</h2><div class="item"><b>1. Цель</b><div class="small muted">Пройди ветвящуюся карту Бездны, собери сильный билд и победи босса.</div></div><div class="item"><b>2. Забег</b><div class="small muted">Каждый узел можно активировать только один раз. После боя сначала нажми «Идти дальше», затем выбери одну награду.</div></div><div class="item"><b>3. Билд</b><div class="small muted">Предметы, навыки, реликвии, проклятия и синергии меняют правила боя. Экспериментируй с комбинациями.</div></div><div class="item"><b>4. Риск</b><div class="small muted">Сильные награды могут стоить HP, золота или привести к элитному бою.</div></div><div class="item"><b>5. Сохранение</b><div class="small muted">Состояние сохраняется при каждом переходе между экранами. Seed позволяет повторять генерацию забега.</div></div><button class="btn primary" onclick="closeModal()">Понятно</button>`);
+}
+function cityScreen(){
+  const c=S.city||{level:1,visits:0,lastResult:null};
+  const r=c.lastResult;
+  const result=r?`<div class="cityStatus"><b>${r.type==='victory'?'🏆 Последний поход завершён победой':'💀 Ты погиб в Бездне и воскрес здесь.'}</b><div class="small muted">Этаж ${r.floor||1} • Золото за забег: ${r.gold||0}</div></div>`:'';
+  return `<div class="card cityHero"><div class="cityIcon">🏙️</div><h1>Город Предела</h1><p class="muted">Последнее безопасное место перед Бездной. Здесь ты воскресаешь, возвращаешься после похода и готовишься к следующему забегу.</p><div class="cityStatus"><b>♆ Хроники Бездны</b><div class="small muted">Уровень города: ${c.level||1} • Возвращений: ${c.visits||0}</div></div>
+    ${result}
+  </div><div class="card"><h2>🌑 Врата Бездны</h2><p class="muted small">Начни новый поход. Выбор героя и Seed появятся перед входом.</p><button class="btn primary" onclick="beginExpedition()">⚔️ Отправиться в Бездну</button></div><div class="grid2"><button class="card cityBuilding" onclick="cityLocked('👤 Персонаж')"><span class="big">👤</span><b>Персонаж</b><span class="small muted">Развитие — №2</span></button><button class="card cityBuilding" onclick="cityLocked('🏋️ Тренировочный двор')"><span class="big">🏋️</span><b>Тренировочный двор</b><span class="small muted">Статы — №3</span></button><button class="card cityBuilding" onclick="cityLocked('🔨 Кузница')"><span class="big">🔨</span><b>Кузница</b><span class="small muted">Развитие — №14</span></button><button class="card cityBuilding" onclick="cityLocked('🛒 Торговец')"><span class="big">🛒</span><b>Торговец</b><span class="small muted">Развитие — №13</span></button></div><div class="card"><h3>📌 Сейчас</h3><div class="small muted">Город уже является постоянной точкой возвращения. Следующим этапом добавим полноценный экран персонажа и свободное распределение характеристик.</div></div>`
+}
+function startScreen(){
+  return `<div class="card"><h1>♆ Хроники Бездны</h1><button class="btn" onclick="showRules()">📜 Правила игры</button><p class="muted">Настоящий мобильный roguelike: ветвящаяся карта, билды, синергии, реликвии, риск, проклятия, элиты, кузница, события, фазовые боссы, Ascension, Seed и мета-прогрессия.</p></div><div class="card"><h2>Выбери героя</h2>${Object.entries(CLASSES).map(([id,c])=>`<button class="btn choice" onclick="openStart('${id}')"><b>${c.icon} ${c.name}</b><br><span class="small muted">${c.desc}</span><br>❤️ ${c.hp} • 💧 ${c.mp} • ⚔️ ${c.atk} • 🛡️ ${c.def}<br>${tagsHTML(c.tags)}</button>`).join('')}</div><div class="card"><h3>🎲 Что уже исправлено</h3><div class="small muted">localStorage никогда не вызывается без try/catch; при запрете Preview используется память. Состояние наград фиксируется. RNG сидированный. Карта связана. Боссы имеют фазы. Синергии пересчитываются после изменений билда.</div></div><div class="card"><button class="btn" onclick="continueRun()">▶️ Продолжить сохранённый забег</button><button class="btn" onclick="showMeta()">🌌 Мета-прогрессия</button></div>`
+}
+function openStart(cls){
+  openModal(`<h2>${CLASSES[cls].icon} ${CLASSES[cls].name}</h2><div class="muted small">Seed можно повторить. Пусто = случайный.</div><input id="seed" placeholder="ABYSS-001"><h3>Ascension</h3>${[0,1,2,3,4,5,6].map(a=>`<button class="btn ${a===0?'primary':''}" onclick="startRun('${cls}',${a},document.getElementById('seed').value)">A${a} — ${a?'+ '+a*7+'% силы врагов':'база'}</button>`).join('')}<button class="btn" onclick="closeModal()">Отмена</button>`)
+}
+function menu(){
+  openModal(`<h2>☰ Меню</h2><button class="btn" onclick="showBuild()">📊 Билд и синергии</button><button class="btn" onclick="showStats()">📈 Статистика забега</button><button class="btn" onclick="showMeta()">🌌 Мета-прогрессия</button><button class="btn goodBtn" onclick="save();closeModal()">💾 Сохранить</button><button class="btn dangerBtn" onclick="if(confirm('Начать новый забег?')){closeModal();newRun()}">🔄 Новый забег</button><button class="btn" onclick="closeModal()">Закрыть</button>`)
+}
+function showBuild(){
+  openModal(`<h2>📊 Билд</h2><div>⚔️ ATK ${S.p.atk} • 🛡️ DEF ${S.p.def} • 🔮 MAGIC ${S.p.magic} • 🎯 CRIT ${Math.round(S.p.crit*100)}%</div><hr><h3>Активные синергии</h3>${SYNERGIES.filter(s=>tagCount(s.tag)>=s.need).map(s=>`<div class="item"><b>${s.name}</b><div class="small muted">${s.desc}</div></div>`).join('')||'<span class="muted">Пока нет.</span>'}<h3>Теги</h3>${tagsHTML(allTags())}</div>`)
+}
+function showStats(){
+  const s=S.stats;openModal(`<h2>📈 Статистика</h2>${Object.entries(s).map(([k,v])=>`<div class="row item"><span>${k}</span><b>${v}</b></div>`).join('')}<button class="btn" onclick="closeModal()">Закрыть</button>`)
+}
+function showMeta(){
+  META=metaLoad();let h=`<h2>🌌 Мета-прогрессия</h2><div class="gold">Очки: ${META.points} • Забегов: ${META.runs} • Побед: ${META.wins}</div>`;
+  for(const [id,u] of Object.entries(META_UP)){const lv=META.levels[id]||0,c=u.cost(lv);h+=`<div class="item"><div class="row"><b>${u.name} ${lv}/${u.max}</b><button class="btn" style="width:auto;margin:0" ${lv>=u.max||META.points<c?'disabled':''} onclick="buyMeta('${id}')">${lv>=u.max?'MAX':c+' очков'}</button></div><div class="small muted">${u.desc}</div></div>`}
+  h+='<button class="btn" onclick="closeModal()">Закрыть</button>';openModal(h)
+}
+function buyMeta(id){META=metaLoad();const u=META_UP[id],lv=META.levels[id]||0,c=u.cost(lv);if(lv>=u.max||META.points<c)return;META.points-=c;META.levels[id]=lv+1;metaSave(META);showMeta()}
+function openModal(html){
+  closeModal();
+  const d=document.createElement('div');
+  d.className='modalBack';d.id='modalBack';
+  d.innerHTML=`<div class="modal">${html}</div>`;
+  document.body.appendChild(d);
+  const m=d.querySelector('.modal');
+  const x=document.createElement('button');
+  x.className='modalClose';x.type='button';x.textContent='×';
+  x.setAttribute('aria-label','Закрыть');x.dataset.noGuard='1';
+  x.onclick=closeModal;m.prepend(x);
+}
+function closeModal(){document.getElementById('modalBack')?.remove()}
+function newRun(){S=fresh();S.city.visits=0;setScreen('city');save();render()}
+function enterCity(message=''){
+  if(!S.city)S.city={level:1,visits:0,lastResult:null};
+  S.city.visits=(S.city.visits||0)+1;
+  if(message)S.city.lastResult=message;
+  S.combat=null;S.rewards=null;S.event=null;S.shop=null;S.ended=false;
+  setScreen('city');save();render();
+}
+function cityLocked(name){toast(name+' пока закрыто. Этот объект добавим на следующем этапе.')}
+function beginExpedition(){closeModal();S.screen='start';save();render()}
+function restoreSavedEvent(){
+  if(!S.event)return;
+  let src=null;
+  if(Number.isInteger(S.event.sourceIndex))src=EVENTS[S.event.sourceIndex]||null;
+  if(!src&&S.event.name)src=EVENTS.find(e=>e.name===S.event.name)||null;
+  if(src)S.event=cloneEvent(src);
+}
+function continueRun(){
+  const raw=STORE.get(SAVE_KEY);if(!raw)return toast('Сохранение не найдено');
+  try{const d=JSON.parse(raw);S=d;restoreSavedEvent();R=RNG(S.seed||'boot');recomputeBuild();render()}catch(e){toast('Сохранение повреждено')}
+}
+/* ---------- Save ---------- */
+function save(){
+  try{
+    const safe=clone(S);
+    STORE.set(SAVE_KEY,JSON.stringify(safe));
+  }catch(e){console.warn('save skipped',e)}
+}
+/* ============================================================
+   EXPANSION v2 — ГОРОД / ПЕРСОНАЖ / СТАТЫ / ПОДКЛАССЫ / ТАЛАНТЫ
+   / ЭКОНОМИКА / КУЗНИЦА / КОДЕКС / ДОСТИЖЕНИЯ / МОДИФИКАТОРЫ
+   / СЕКРЕТЫ / АЛЬТ-БОССЫ / РИСК / ПРЕДЗАБЕГОВЫЙ LOADOUT
+   ============================================================ */
+const SUBCLASSES={
+  warrior:{
+    guardian:{name:'Хранитель',icon:'🛡️',desc:'Блок и выживание.',tags:['block','defense'],bonus:{def:3,hp:14}},
+    berserker:{name:'Берсерк',icon:'🔥',desc:'HP превращается в урон.',tags:['risk','martial'],bonus:{atk:3,hp:-8}}
+  },
+  mage:{
+    pyromancer:{name:'Пиромант',icon:'🔥',desc:'Горение и взрывные цепочки.',tags:['burn','magic'],bonus:{magic:5}},
+    arcanist:{name:'Арканист',icon:'🔮',desc:'Мана и усиленные заклинания.',tags:['magic','freeze'],bonus:{mp:12}}
+  },
+  rogue:{
+    assassin:{name:'Ассасин',icon:'🗡️',desc:'Криты и добивание.',tags:['crit','combo'],bonus:{atk:2,crit:.05}},
+    alchemist:{name:'Алхимик',icon:'☠️',desc:'Яд и контроль.',tags:['poison','risk'],bonus:{magic:3,mp:6}}
+  },
+  paladin:{
+    templar:{name:'Тамплиер',icon:'🛡️',desc:'Защита, блок и стойкость.',tags:['block','defense'],bonus:{def:4,hp:18}},
+    crusader:{name:'Крестоносец',icon:'⚔️',desc:'Сильные удары и выживание.',tags:['martial','bleed'],bonus:{atk:3,hp:6}}
+  },
+  warlock:{
+    occultist:{name:'Оккультист',icon:'🜏',desc:'Магия, риск и проклятия.',tags:['magic','risk'],bonus:{magic:6,hp:-6}},
+    plaguecaller:{name:'Зовущий чуму',icon:'☠️',desc:'Яд и истощение врага.',tags:['poison','magic'],bonus:{magic:3,mp:10}}
+  },
+  ranger:{
+    tracker:{name:'Следопыт',icon:'🏹',desc:'Криты и точечный урон.',tags:['crit','martial'],bonus:{atk:3,crit:.04}},
+    trapper:{name:'Ловчий',icon:'🪤',desc:'Яд, комбо и контроль.',tags:['poison','combo'],bonus:{atk:1,mp:8}}
+  }
+};
+const TALENTS={
+  might:{name:'Мощь',cost:20,max:5,desc:'+2 ATK за ранг'},
+  vitality:{name:'Живучесть',cost:18,max:5,desc:'+8 max HP за ранг'},
+  focus:{name:'Концентрация',cost:18,max:5,desc:'+4 max MP за ранг'},
+  guard:{name:'Страж',cost:18,max:5,desc:'+1 DEF за ранг'},
+  fortune:{name:'Инстинкт добытчика',cost:24,max:5,desc:'+2% шанс редкой награды'},
+  combo:{name:'Мастер серии',cost:28,max:3,desc:'+1 стартовое комбо'},
+  blood:{name:'Кровавый ритуал',cost:32,max:3,desc:'+3% урона при HP <50%'},
+  void:{name:'Зов Бездны',cost:45,max:1,desc:'Открывает секретный путь и финал'}
+};
+const LOADOUTS=[
+  {id:'none',name:'Без дара',desc:'Никаких бонусов.',cost:0},
+  {id:'vigor',name:'Зелье витальности',desc:'+12 max HP в начале забега.',cost:15},
+  {id:'focus',name:'Осколок фокуса',desc:'+8 max MP в начале забега.',cost:15},
+  {id:'edge',name:'Острое лезвие',desc:'+2 ATK в начале забега.',cost:20},
+  {id:'ward',name:'Малый оберег',desc:'+2 DEF в начале забега.',cost:20}
+];
+const RUN_MODIFIERS=[
+  {id:'normal',name:'Обычный путь',desc:'Без модификатора.',mult:1},
+  {id:'bloodmoon',name:'Кровавая луна',desc:'Враги +20% ATK, награды +35%.',mult:1.35},
+  {id:'glass',name:'Стеклянный мир',desc:'Все получают +25% урона.',mult:1.45},
+  {id:'greed',name:'Золотая лихорадка',desc:'+60% золота, но отдых лечит на 20% меньше.',mult:1.25},
+  {id:'voidstorm',name:'Шторм Бездны',desc:'Каждые 3 хода случайный статус.',mult:1.6}
+];
+const ACHIEVEMENTS={
+  first:{name:'Первый шаг',desc:'Начать первый забег.',pts:5},
+  elite:{name:'Охотник на элит',desc:'Победить элиту.',pts:10},
+  legendary:{name:'Легенда',desc:'Получить легендарный предмет.',pts:15},
+  cursed:{name:'Цена силы',desc:'Закончить забег с проклятием.',pts:10},
+  asc5:{name:'Глубже',desc:'Победить на Ascension 5+.',pts:30},
+  noHeal:{name:'Без костыля',desc:'Победить без лечения в забеге.',pts:25},
+  void:{name:'Шёпот Бездны',desc:'Открыть секретный путь.',pts:35},
+  boss3:{name:'Разрушитель фаз',desc:'Победить альтернативного босса.',pts:25},
+  classPaladin:{name:'Щит Бездны',desc:'Завершить забег Паладином.',pts:20},
+  classWarlock:{name:'Тёмный договор',desc:'Завершить забег Чернокнижником.',pts:20},
+  classRanger:{name:'Безупречный выстрел',desc:'Завершить забег Следопытом.',pts:20},
+  boss5:{name:'Пять лиц Бездны',desc:'Встретить всех пяти боссов.',pts:40}
+};
+const CODEX_ENEMIES=[...ENEMIES,...BOSSES];
+function ensureMeta(){
+  META=metaLoad();
+  META.points=META.points||0; META.essence=META.essence||0; META.shards=META.shards||0;
+  META.embers=META.embers||0; META.runs=META.runs||0; META.wins=META.wins||0;
+  META.levels=META.levels||{}; META.ach=META.ach||{}; META.codex=META.codex||{};
+  META.talents=META.talents||{}; META.stats=META.stats||{};
+  META.unlocks=META.unlocks||{subclasses:[],loadouts:[],modifiers:[]};
+  if(!META.unlocks.subclasses.length) META.unlocks.subclasses=['guardian','berserker','pyromancer','arcanist','assassin','alchemist'];
+  if(!META.unlocks.loadouts.length) META.unlocks.loadouts=['none','vigor','focus','edge','ward'];
+  if(!META.unlocks.modifiers.length) META.unlocks.modifiers=['normal','bloodmoon','glass','greed','voidstorm'];
+  metaSave(META); return META;
+}
+ensureMeta();
+const BASE_FRESH=fresh;
+fresh=function(){
+  const s=BASE_FRESH();
+  s.profile={subclass:null,loadout:'none',modifier:'normal',talents:{}};
+  s.resources={focus:0,embers:0,shards:0};
+  s.secret={voidPath:false,altBoss:false,ending:'normal'};
+  return s;
+};
+function talentLevel(id){return META.talents?.[id]||0}
+function buyTalent(id){
+  ensureMeta(); const t=TALENTS[id],lv=talentLevel(id); if(!t||lv>=t.max)return;
+  const cost=t.cost*(lv+1); if(META.essence<cost){toast('Недостаточно эссенции');return}
+  META.essence-=cost; META.talents[id]=lv+1; metaSave(META); render();
+}
+function awardAchievement(id){
+  ensureMeta(); if(META.ach[id]||!ACHIEVEMENTS[id])return;
+  META.ach[id]=Date.now(); META.essence+=(ACHIEVEMENTS[id].pts||0); metaSave(META);
+  addLog('🏅 Достижение: '+ACHIEVEMENTS[id].name,'good');
+}
+function discoverCodex(id){ensureMeta();META.codex[id]=(META.codex[id]||0)+1;metaSave(META)}
+const BASE_START_RUN=startRun;
+startRun=function(cls,asc,seed,subclass='auto',loadout='none',modifier='normal'){
+  ensureMeta();
+  const sc=subclass==='auto'?(Object.keys(SUBCLASSES[cls]||{})[0]||null):subclass;
+  const ld=LOADOUTS.find(x=>x.id===loadout)||LOADOUTS[0];
+  const mod=RUN_MODIFIERS.find(x=>x.id===modifier)||RUN_MODIFIERS[0];
+  BASE_START_RUN(cls,asc,seed);
+  S.profile={subclass:sc,loadout:ld.id,modifier:mod.id,talents:clone(META.talents||{})};
+  const sub=SUBCLASSES[cls]?.[sc];
+  if(sub){S.p.atk+=(sub.bonus.atk||0);S.p.def+=(sub.bonus.def||0);S.p.max+=(sub.bonus.hp||0);S.p.hp=Math.min(S.p.max,S.p.hp+(sub.bonus.hp||0));S.p.magic+=(sub.bonus.magic||0);S.p.maxmp+=(sub.bonus.mp||0);S.p.mp=S.p.maxmp;}
+  if(ld.id==='vigor'){S.p.max+=12;S.p.hp+=12}
+  if(ld.id==='focus'){S.p.maxmp+=8;S.p.mp+=8}
+  if(ld.id==='edge')S.p.atk+=2;
+  if(ld.id==='ward')S.p.def+=2;
+  const tl=META.talents||{};
+  S.p.atk+=(tl.might||0)*2; S.p.def+=tl.guard||0; S.p.max+=(tl.vitality||0)*8; S.p.hp+=(tl.vitality||0)*8; S.p.maxmp+=(tl.focus||0)*4; S.p.mp+=(tl.focus||0)*4;
+  S.p.combo=(tl.combo||0); S.p.talentBlood=(tl.blood||0)*.03;
+  S.p.crit+=(META.levels.crit||0)*.01; S.gold+=META.levels.startGold||0;
+  recomputeBuild(); awardAchievement('first'); metaSave(META); save(); render();
+};
+function openStart(cls){
+  ensureMeta();
+  const subs=Object.entries(SUBCLASSES[cls]||{}).map(([id,x])=>`<button class="btn subPick" onclick="this.parentNode.querySelectorAll('.subPick').forEach(b=>b.classList.remove('primary'));this.classList.add('primary');this.parentNode.dataset.sub='${id}'"><b>${x.icon} ${x.name}</b><br><span class="small muted">${x.desc}</span></button>`).join('');
+  const loads=LOADOUTS.filter(x=>META.unlocks.loadouts.includes(x.id)).map(x=>`<button class="btn" onclick="document.getElementById('loadout').value='${x.id}'">${x.name} <span class="small muted">— ${x.desc}</span></button>`).join('');
+  const mods=RUN_MODIFIERS.filter(x=>META.unlocks.modifiers.includes(x.id)).map(x=>`<option value="${x.id}">${x.name} — ${x.desc}</option>`).join('');
+  openModal(`<h2>${CLASSES[cls].icon} ${CLASSES[cls].name}</h2><div class="muted small">Выбери подкласс, стартовый дар и модификатор. Seed делает забег воспроизводимым.</div><input id="seed" placeholder="ABYSS-001"><h3>Подкласс</h3><div id="subWrap" data-sub="${Object.keys(SUBCLASSES[cls]||{})[0]||''}">${subs}</div><h3>Loadout</h3><select id="loadout" style="width:100%;padding:10px;border-radius:10px;background:#080d17;color:white;border:1px solid #33415d">${LOADOUTS.filter(x=>META.unlocks.loadouts.includes(x.id)).map(x=>`<option value="${x.id}">${x.name} — ${x.desc}</option>`).join('')}</select><h3>Модификатор забега</h3><select id="modifier" style="width:100%;padding:10px;border-radius:10px;background:#080d17;color:white;border:1px solid #33415d">${mods}</select><h3>Ascension</h3>${[0,1,2,3,4,5,6,7,8,9,10].map(a=>`<button class="btn ${a===0?'primary':''}" onclick="startRun('${cls}',${a},document.getElementById('seed').value,document.getElementById('subWrap').dataset.sub,document.getElementById('loadout').value,document.getElementById('modifier').value)">A${a} — ${a?'+ '+a*7+'% силы врагов':'база'}</button>`).join('')}<button class="btn" onclick="closeModal()">Отмена</button>`);
+}
+/* ---------- Character / City ---------- */
+function characterScreen(){
+  ensureMeta(); const tl=META.talents||{};
+  const cls=S.cls&&CLASSES[S.cls], sc=S.profile?.subclass&&SUBCLASSES[S.cls]?.[S.profile.subclass];
+  return `<div class="card cityHero"><div class="cityIcon">👤</div><h1>Персонаж</h1><p class="muted">Постоянное развитие между забегами. Здесь находятся статы, подкласс и дерево талантов.</p></div><div class="card"><h2>${cls?cls.icon+' '+cls.name:'Герой'}</h2><div class="item"><b>Подкласс:</b> ${sc?sc.icon+' '+sc.name:'Выбирается перед забегом'}<div class="small muted">${sc?.desc||''}</div></div><div class="grid2"><div class="stat">❤️ HP<b>${S.p?.max||'-'}</b></div><div class="stat">⚔️ ATK<b>${S.p?.atk||'-'}</b></div><div class="stat">🛡️ DEF<b>${S.p?.def||'-'}</b></div><div class="stat">💧 MP<b>${S.p?.maxmp||'-'}</b></div></div></div><div class="card"><div class="row"><h2>🌱 Таланты</h2><span class="pill">${META.essence} эссенции</span></div>${Object.entries(TALENTS).map(([id,t])=>{const lv=tl[id]||0,c=t.cost*(lv+1);return `<div class="item"><div class="row"><b>${t.name} ${lv}/${t.max}</b><button class="btn" style="width:auto;margin:0" ${lv>=t.max||META.essence<c?'disabled':''} onclick="buyTalent('${id}')">${lv>=t.max?'MAX':c+' ✦'}</button></div><div class="small muted">${t.desc}</div></div>`}).join('')}</div><button class="btn" onclick="setScreen('city');render()">🏙️ Назад в город</button>`
+}
+function statsTrainingScreen(){
+  ensureMeta();
+  const rows=[['hp','Стойкость','+8 max HP',8],['atk','Мощь','+1 ATK',10],['def','Закалка','+1 DEF',10],['mp','Фокус','+4 max MP',10],['crit','Инстинкт','+1% CRIT',14]];
+  return `<div class="card"><h2>🏋️ Тренировочный двор</h2><p class="muted">Здесь развитие идёт через реальные характеристики, а не абстрактный уровень.</p><div class="cityStatus">Эссенция: <b>${META.essence} ✦</b></div>${rows.map(r=>`<div class="item"><div class="row"><b>${r[1]}</b><button class="btn" style="width:auto;margin:0" onclick="trainStat('${r[0]}',${r[3]})">${r[3]} ✦</button></div><div class="small muted">${r[2]}</div></div>`).join('')}<button class="btn" onclick="setScreen('city');render()">🏙️ Назад</button></div>`;
+}
+function trainStat(id,cost){ensureMeta();if(META.essence<cost){toast('Недостаточно эссенции');return}META.essence-=cost;META.levels[id]=(META.levels[id]||0)+1;metaSave(META);toast('Характеристика улучшена');render()}
+function forgeCityScreen(){
+  return `<div class="card"><h2>🔨 Кузница</h2><p class="muted">Постоянная мастерская: разбирай трофеи в забегах, а здесь улучшай качество.</p><div class="cityStatus">🔥 Уголь: <b>${META.embers||0}</b> • 💠 Осколки: <b>${META.shards||0}</b></div><button class="btn" onclick="forgeConvert('embers')">🔥 10 угля → +1 уровень мета-кузницы (40 ✦)</button><button class="btn" onclick="forgeConvert('shards')">💠 3 осколка → +10 эссенции</button><button class="btn" onclick="setScreen('city');render()">🏙️ Назад</button></div>`;
+}
+function forgeConvert(kind){ensureMeta();if(kind==='embers'){if((META.embers||0)<10||META.essence<40){toast('Нужно 10 угля и 40 эссенции');return}META.embers-=10;META.essence-=40;META.levels.forge=(META.levels.forge||0)+1}else{if((META.shards||0)<3){toast('Нужно 3 осколка');return}META.shards-=3;META.essence+=10}metaSave(META);render()}
+function merchantCityScreen(){
+  ensureMeta();
+  const offers=[['pocket','Карманный кошель','+25 стартового золота',25],['ember','Уголь кузнеца','+5 угля',35],['shard','Осколки','+2 осколка',45]];
+  return `<div class="card"><h2>🛒 Торговец</h2><div class="cityStatus">Эссенция: <b>${META.essence} ✦</b></div>${offers.map(x=>`<button class="btn" onclick="cityBuy('${x[0]}',${x[3]})"><b>${x[1]}</b> — ${x[3]} ✦<br><span class="small muted">${x[2]}</span></button>`).join('')}<button class="btn" onclick="setScreen('city');render()">🏙️ Назад</button></div>`;
+}
+function cityBuy(id,cost){ensureMeta();if(META.essence<cost){toast('Недостаточно эссенции');return}META.essence-=cost;if(id==='ember')META.embers=(META.embers||0)+5;if(id==='shard')META.shards=(META.shards||0)+2;if(id==='pocket')META.levels.startGold=(META.levels.startGold||0)+25;metaSave(META);render()}
+function codexScreen(){
+  ensureMeta(); const seen=id=>META.codex[id]||0;
+  return `<div class="card"><h2>📚 Кодекс Бездны</h2><p class="muted">Сколько раз ты встречал противников.</p>${CODEX_ENEMIES.map(e=>`<div class="item"><div class="row"><b>${seen(e.id)?e.name:'???'}</b><span class="pill">${seen(e.id)||0}</span></div><div class="small muted">${seen(e.id)?((e.hp||0)+' HP • '+(e.atk||0)+' ATK • '+(e.def||0)+' DEF'):'Встреться с ним в забеге.'}</div></div>`).join('')}<button class="btn" onclick="setScreen('city');render()">🏙️ Назад</button></div>`;
+}
+function achievementsScreen(){ensureMeta();return `<div class="card"><h2>🏅 Достижения</h2><div class="cityStatus">Получено: ${Object.keys(META.ach).length}/${Object.keys(ACHIEVEMENTS).length}</div>${Object.entries(ACHIEVEMENTS).map(([id,a])=>`<div class="item"><b>${META.ach[id]?'🏅':'🔒'} ${a.name}</b><div class="small muted">${a.desc} • +${a.pts} ✦</div></div>`).join('')}<button class="btn" onclick="setScreen('city');render()">🏙️ Назад</button></div>`}
+function expandedCityScreen(){
+  ensureMeta(); const c=S.city||{level:1,visits:0,lastResult:null}; const r=c.lastResult;
+  return `<div class="card cityHero"><div class="cityIcon">🏙️</div><h1>Город Предела</h1><p class="muted">Постоянная база: воскресни, перераспредели развитие, собери loadout и снова войди в Бездну.</p><div class="cityStatus">✦ ${META.essence} эссенции • 💠 ${META.shards||0} осколков • 🔥 ${META.embers||0} угля</div>${r?`<div class="cityStatus"><b>${r.type==='victory'?'🏆 Последний поход — победа':'💀 Последний поход — поражение'}</b><div class="small muted">Этаж ${r.floor||1} • ${r.gold||0} золота</div></div>`:''}</div><div class="card"><h2>🌑 Врата Бездны</h2><button class="btn primary" onclick="beginExpedition()">⚔️ Новый поход</button><button class="btn" onclick="continueRun()">▶️ Продолжить сохранённый забег</button></div><div class="grid2"><button class="card cityBuilding" onclick="openTavern()"><span class="big">🍺</span><b>Таверна</b><span class="small muted">Наём союзников</span></button><button class="card cityBuilding" onclick="setScreen('character');render()"><span class="big">👤</span><b>Персонаж</b><span class="small muted">№2</span></button><button class="card cityBuilding" onclick="setScreen('training');render()"><span class="big">🏋️</span><b>Статы</b><span class="small muted">№3</span></button><button class="card cityBuilding" onclick="setScreen('forgeCity');render()"><span class="big">🔨</span><b>Кузница</b><span class="small muted">№14</span></button><button class="card cityBuilding" onclick="setScreen('merchant');render()"><span class="big">🛒</span><b>Торговец</b><span class="small muted">№13</span></button><button class="card cityBuilding" onclick="setScreen('codex');render()"><span class="big">📚</span><b>Кодекс</b><span class="small muted">№22</span></button><button class="card cityBuilding" onclick="setScreen('achievements');render()"><span class="big">🏅</span><b>Достижения</b><span class="small muted">№21</span></button></div><div class="card"><h3>🌌 Мета-прогрессия</h3><div class="small muted">Постоянные статы, таланты, ресурсы и открытия сохраняются между забегами.</div><button class="btn" onclick="showMeta()">Открыть старое дерево мета-улучшений</button></div>`;
+}
+/* ---------- Deeper combat / build rules ---------- */
+const BASE_ALL_TAGS=allTags;
+allTags=function(){const out=BASE_ALL_TAGS();const sc=S.profile?.subclass&&SUBCLASSES[S.cls]?.[S.profile.subclass];if(sc)out.push(...(sc.tags||[]));return out;};
+const BASE_DMG_CALC=dmgCalc;
+dmgCalc=function(att,def,mult=1,magic=false){
+  let d=BASE_DMG_CALC(att,def,mult,magic);
+  if(att===S.p){d=Math.floor(d*(1+(S.p.talentBlood||0)*(S.p.hp/S.p.max<.5?1:0)));if(S.profile?.modifier==='glass')d=Math.floor(d*1.25);}
+  else if(S.profile?.modifier==='glass')d=Math.floor(d*1.25);
+  if(S.profile?.modifier==='bloodmoon'&&att!==S.p)d=Math.floor(d*1.2);
+  return Math.max(1,d);
+};
+const BASE_ENEMY_ATTACK=enemyAttack;
+enemyAttack=function(mult=1,forceCrit=false){
+  if(S.profile?.modifier==='bloodmoon')mult*=1.2;
+  if(S.profile?.modifier==='glass')mult*=1.25;
+  BASE_ENEMY_ATTACK(mult,forceCrit);
+};
+const BASE_HEAL=heal;
+heal=function(n){if(S.profile?.modifier==='greed')n=Math.floor(n*.8);BASE_HEAL(n)};
+const BASE_USE_SKILL=useSkill;
+useSkill=function(id){
+  if(S.screen!=='combat'||!S.combat)return;
+  S.p.cooldowns=S.p.cooldowns||{};
+  if((S.p.cooldowns[id]||0)>0){toast('Навык перезаряжается: '+S.p.cooldowns[id]+' ход.');return}
+  BASE_USE_SKILL(id);
+  if(S.screen==='combat'&&S.p)S.p.cooldowns[id]=id==='storm'?3:(id==='shadow'||id==='rage'?2:1);
+};
+const BASE_SET_INTENT=setIntent;
+setIntent=function(){BASE_SET_INTENT();if(S.p){S.p.cooldowns=S.p.cooldowns||{};Object.keys(S.p.cooldowns).forEach(k=>{if(S.p.cooldowns[k]>0&&S.combat?.turn>1)S.p.cooldowns[k]=Math.max(0,S.p.cooldowns[k]);});}};
+const BASE_END_TURN_CD=endPlayerTurn;
+const BASE_COMBAT_SCREEN=combatScreen;
+combatScreen=function(){
+  let h=BASE_COMBAT_SCREEN();
+  h=h.replace(/<button class="btn" onclick="useSkill\('([^']+)\'\)"([^>]*)>([\s\S]*?)<\/button>/g,(m,id,attrs,body)=>{const cd=S.p?.cooldowns?.[id]||0;return `<button class="btn" onclick="useSkill('${id}')"${attrs}${cd?' disabled':''}>${body}${cd?`<br><span class="small muted">⏳ Перезарядка: ${cd}</span>`:''}</button>`;});
+  return h;
+};
+const BASE_START_COMBAT=startCombat;
+startCombat=function(elite=false){BASE_START_COMBAT(elite);if(S.combat?.enemy){discoverCodex(S.combat.enemy.id);if(elite)awardAchievement('elite');if(S.profile?.modifier==='bloodmoon')S.combat.enemy.max=S.combat.enemy.hp=Math.floor(S.combat.enemy.hp*1.05);if(S.profile?.modifier==='voidstorm')S.combat.enemy.voidstorm=true;}}
+const BASE_START_BOSS=startBoss;
+startBoss=function(){
+  BASE_START_BOSS(); const e=enemy(); if(!e)return; discoverCodex(e.id);
+  const alt=(S.asc>=5||META.talents?.void)&&R.chance(.35); if(alt){e.alt=true;e.name='👑 '+e.name+' — Искажённая форма';e.max=Math.floor(e.max*1.25);e.hp=e.max;e.atk=Math.floor(e.atk*1.15);S.secret.altBoss=true;awardAchievement('boss3');}
+};
+const BASE_END_PLAYER_TURN=endPlayerTurn;
+endPlayerTurn=function(){
+  BASE_END_PLAYER_TURN();
+  if(S.screen==='combat'&&S.p){S.p.cooldowns=S.p.cooldowns||{};Object.keys(S.p.cooldowns).forEach(k=>{S.p.cooldowns[k]=Math.max(0,(S.p.cooldowns[k]||0)-1);});}
+  if(S.screen==='combat'&&S.combat?.enemy&&S.profile?.modifier==='voidstorm'&&S.combat.turn%3===0){const e=S.combat.enemy;const st=R.pick(['burn','poison','bleed','slow']);addStatus(e,st,2);addLog('🌌 Шторм Бездны: '+st,'warn');save();render()}
+};
+/* ---------- More reward rarity / legendary effects / cursed loot ---------- */
+const BASE_RARITY_ROLL=rarityRoll;
+rarityRoll=function(){let r=BASE_RARITY_ROLL();const bonus=(META.talents?.fortune||0)*.02;if(R.chance(bonus)){const order=['common','uncommon','rare','epic','legendary'];r=order[Math.min(order.indexOf(r)+1,4)]}return r};
+const BASE_MAKE_REWARDS=makeRewards;
+makeRewards=function(count){const out=BASE_MAKE_REWARDS(count);if(S.secret?.voidPath&&out.length<4)out.push({type:'relic',data:clone(R.pick(RELICS))});return out};
+const BASE_ADD_ITEM=addItem;
+addItem=function(item){const ok=BASE_ADD_ITEM(item);if(ok&&item.rarity==='legendary')awardAchievement('legendary');if(ok&&item.curse)addCurse(item.curse);return ok};
+/* ---------- Exact run return + currencies + endings ---------- */
+const BASE_WIN_COMBAT=winCombat;
+winCombat=function(){
+  const beforeGold=S.gold;
+  BASE_WIN_COMBAT();
+  if(S.combat?.enemy){discoverCodex(S.combat.enemy.id);if(S.combat.enemy.alt)S.secret.ending='alt';}
+  if(S.profile?.modifier==='bloodmoon'||S.profile?.modifier==='greed'){const bonus=Math.floor(Math.max(0,S.gold-beforeGold)*.35);if(bonus){S.gold+=bonus;S.stats.gold+=bonus;addLog('🪙 Модификатор: +'+bonus+' золота','good');}}
+  if(S.combat?.enemy?.boss){ensureMeta();META.essence+=25+S.floor*4;META.embers+=3;META.shards+=S.combat.enemy.alt?4:2;if(S.asc>=5)awardAchievement('asc5');if(S.curses.length)awardAchievement('cursed');if(!S.stats.heals)awardAchievement('noHeal');if(META.talents?.void){S.secret.voidPath=true;awardAchievement('void')}metaSave(META);S.city.lastResult={type:'victory',floor:S.floor,gold:S.stats.gold||0,alt:!!S.combat.enemy.alt};save();}
+}
+const BASE_LOSE_RUN=loseRun;
+loseRun=function(){BASE_LOSE_RUN();if(S.ended){ensureMeta();META.essence+=Math.max(2,Math.floor(S.floor*1.5));META.embers+=Math.floor(S.floor/3);if(S.curses.length)awardAchievement('cursed');metaSave(META);save();}}
+/* ---------- Persistent start gold / secret route ---------- */
+const BASE_BEGIN_EXPEDITION=beginExpedition;
+beginExpedition=function(){BASE_BEGIN_EXPEDITION();}
+const BASE_CHOOSE_NODE=chooseNode;
+chooseNode=function(id){const before=S.stats.rooms;BASE_CHOOSE_NODE(id);const n=S.map.find(x=>x.id===id);if(n&&n.type==='risk'&&META.talents?.void){S.secret.voidPath=true;addLog('🌑 Секретный путь замечает тебя.','warn');save();}}
+const BASE_RISK_SCREEN=riskScreen;
+riskScreen=function(){const base=BASE_RISK_SCREEN();if(META.talents?.void)return base.replace('<button class="btn" onclick="leaveRoom()">🚪 Уйти</button>','<button class="btn dangerBtn" onclick="secretRoom()">🌑 Открыть тайный проход</button><button class="btn" onclick="leaveRoom()">🚪 Уйти</button>');return base;};
+function secretRoom(){if(!META.talents?.void){leaveRoom();return}S.secret.voidPath=true;S.p.hp=Math.max(1,S.p.hp-15);S.gold+=70;giveRelic('legendary');addCurse('mark');awardAchievement('void');addLog('🌑 Тайный алтарь Бездны открыт.','warn');leaveRoom();}
+/* ---------- Screens ---------- */
+const BASE_SCREEN=screen;
+screen=function(){
+  switch(S.screen){
+    case 'city':return expandedCityScreen();
+    case 'character':return characterScreen();
+    case 'training':return statsTrainingScreen();
+    case 'forgeCity':return forgeCityScreen();
+    case 'merchant':return merchantCityScreen();
+    case 'codex':return codexScreen();
+    case 'achievements':return achievementsScreen();
+    default:return BASE_SCREEN();
+  }
+}
+SCREEN_FLOW.city.push('character','training','forgeCity','merchant','codex','achievements');
+SCREEN_FLOW.character=['character','city'];SCREEN_FLOW.training=['training','city'];SCREEN_FLOW.forgeCity=['forgeCity','city'];SCREEN_FLOW.merchant=['merchant','city'];SCREEN_FLOW.codex=['codex','city'];SCREEN_FLOW.achievements=['achievements','city'];
+/* ---------- Richer menu ---------- */
+function exitToCity(){
+  closeModal();
+  S.screen='city';
+  save();
+  render();
+}
+function menu(){
+  openModal(`<h2>☰ Меню</h2><button class="btn" onclick="showBuild()">📊 Билд и синергии</button><button class="btn" onclick="showStats()">📈 Статистика забега</button><button class="btn" onclick="showMeta()">🌌 Мета-прогрессия</button><button class="btn" onclick="setScreen('codex');closeModal();render()">📚 Кодекс</button><button class="btn" onclick="setScreen('achievements');closeModal();render()">🏅 Достижения</button><button class="btn goodBtn" onclick="save();closeModal()">💾 Сохранить</button><button class="btn" onclick="exportShare()">📤 Передать игру</button><button class="btn" onclick="importShare()">📥 Загрузить игру</button><button class="btn" onclick="exitToCity()">🏙️ Выйти на главный экран</button><button class="btn dangerBtn" onclick="if(confirm('Начать новую собственную игру?')){closeModal();newRun()}">🆕 Новая игра</button><button class="btn" onclick="closeModal()">Закрыть</button>`)
+}
+/* ---------- Header: persistent resources ---------- */
+const BASE_HEADER=header;
+header=function(){
+  const h=BASE_HEADER();
+  if(!S.p)return h;
+  return h.replace('</header>',`<div class="sub">✦ Эссенция ${META.essence||0} • 💠 ${META.shards||0} • 🔥 ${META.embers||0}${S.profile?.modifier&&S.profile.modifier!=='normal'?' • 🌌 '+(RUN_MODIFIERS.find(x=>x.id===S.profile.modifier)?.name||''):''}</div></header>`);
+}
+/* ---------- Better end screen ---------- */
+const BASE_END_SCREEN=endScreen;
+endScreen=function(win){
+  const base=BASE_END_SCREEN(win);
+  const ending=S.secret?.ending==='alt'?'🌑 Альтернативная концовка: Искажённая Бездна.':S.secret?.voidPath?'🜏 Секретная концовка: Зов Бездны.':win?'🌌 Обычная концовка.':'💀 Путь оборван.';
+  return base.replace('</div>',`<div class="resultLine">${ending}</div><div class="resultLine">✦ Эссенция: ${META.essence||0} • 💠 ${META.shards||0} • 🔥 ${META.embers||0}</div></div>`);
+}
+/* ---------- Exact save shortcut ---------- */
+window.addEventListener('beforeunload',()=>save());
+
+/* ============================================================
+   ТАВЕРНА — СОЮЗНИКИ
+   ============================================================ */
+const ALLIES={
+  guard:{id:'guard',name:'Страж',icon:'🛡️',hp:70,maxHp:70,atk:8,def:6,cost:25,tags:['block','defense'],desc:'Выносливый защитник. Иногда принимает удар на себя.',skill:'shield'},
+  rogue:{id:'rogue',name:'Разбойник',icon:'🗡️',hp:48,maxHp:48,atk:12,def:3,cost:30,tags:['crit','combo','martial'],desc:'Быстрый боец с шансом нанести критический удар.',skill:'crit'},
+  mage:{id:'mage',name:'Маг',icon:'🔮',hp:42,maxHp:42,atk:14,def:2,cost:35,tags:['magic','burn'],desc:'Магическая атака и шанс поджечь врага.',skill:'burn'},
+  hunter:{id:'hunter',name:'Охотник',icon:'🏹',hp:50,maxHp:50,atk:11,def:4,cost:32,tags:['poison','crit'],desc:'Дальний боец. Накладывает яд.',skill:'poison'},
+  healer:{id:'healer',name:'Целитель',icon:'💚',hp:44,maxHp:44,atk:5,def:3,cost:40,tags:['heal','support'],desc:'Периодически лечит тебя и союзников.',skill:'heal'},
+  berserker:{id:'berserker',name:'Берсерк',icon:'🔥',hp:58,maxHp:58,atk:15,def:2,cost:45,tags:['risk','martial','bleed'],desc:'Чем меньше HP, тем сильнее его атака.',skill:'rage'}
+};
+let TAVERN_DAY=0;
+function tavernRoster(){
+  const ids=Object.keys(ALLIES);
+  const rng=RNG('TAVERN-'+Math.floor((META.runs||0)/1)+'-'+(META.essence||0));
+  const out=[]; let tries=0;
+  while(out.length<4&&tries++<30){
+    const id=rng.pick(ids);
+    if(!out.includes(id))out.push(id);
+  }
+  return out.map(id=>clone(ALLIES[id]));
+}
+function allyCount(){return (S.allies||[]).length}
+function hasAlly(id){return (S.allies||[]).some(a=>a.id===id)}
+function hireAlly(id){
+  ensureMeta();
+  if(allyCount()>=2){toast('В отряд можно взять максимум 2 союзников.');return}
+  if(hasAlly(id)){toast('Этот союзник уже в твоём отряде.');return}
+  const a=ALLIES[id];if(!a)return;
+  if((META.essence||0)<a.cost){toast('Недостаточно эссенции.');return}
+  META.essence-=a.cost;
+  if(!S.allies)S.allies=[];
+  S.allies.push(clone(a));
+  metaSave(META);save();render();
+}
+function dismissAlly(i){
+  if(!S.allies?.[i])return;
+  const a=S.allies[i];
+  S.allies.splice(i,1);
+  addLog('👥 '+a.name+' покинул отряд.','sys');
+  save();render();
+}
+function tavernScreen(){
+  ensureMeta();
+  const roster=tavernRoster();
+  return `<div class="card"><h2>🍺 Таверна</h2><p class="muted">Здесь можно нанять союзников перед походом. В отряде одновременно могут быть максимум 2 союзника.</p><div class="cityStatus">🔥 Эссенция: <b>${META.essence||0}</b> • 👥 Отряд: <b>${allyCount()}/2</b></div></div>
+    <div class="card"><h3>👥 Доступные наёмники</h3>${roster.map(a=>`<div class="item"><div class="row"><b>${a.icon} ${a.name}</b><span class="gold">🔥 ${a.cost}</span></div><div class="small muted">❤️ ${a.hp} • ⚔️ ${a.atk} • 🛡️ ${a.def}</div><div class="small muted">${a.desc}</div><button class="btn primary" ${allyCount()>=2||hasAlly(a.id)||(META.essence||0)<a.cost?'disabled':''} onclick="hireAlly('${a.id}')">${hasAlly(a.id)?'Уже в отряде': 'Нанять за '+a.cost+' 🔥'}</button></div>`).join('')}</div>
+    <div class="card"><h3>🧑‍🤝‍🧑 Твой отряд</h3>${S.allies?.length?S.allies.map((a,i)=>`<div class="item"><div class="row"><b>${a.icon} ${a.name}</b><span>❤️ ${a.hp}/${a.maxHp}</span></div><div class="small muted">${a.desc}</div><button class="btn dangerBtn" onclick="dismissAlly(${i})">Убрать из отряда</button></div>`).join(''):'<span class="muted">Пока никто не нанят.</span>'}</div>
+    <button class="btn" onclick="closeModal();setScreen('city');save();render()">← Вернуться в город</button>`;
+}
+function allyHTML(){
+  if(!S.allies?.length)return '';
+  return `<div class="card"><h3>👥 Союзники</h3>${S.allies.map(a=>`<div class="item"><div class="row"><b>${a.icon} ${a.name}</b><span>❤️ ${Math.max(0,a.hp)}/${a.maxHp}</span></div><div class="bar hp"><i style="width:${Math.max(0,a.hp/a.maxHp*100)}%"></i></div><div class="small muted">⚔️ ${a.atk} • 🛡️ ${a.def}</div></div>`).join('')}</div>`;
+}
+function allyTurn(){
+  if(!S.allies?.length||!enemy()?.hp)return;
+  for(const a of S.allies){
+    if(a.hp<=0)continue;
+    if(a.skill==='heal'){
+      const targets=[S.p,...S.allies].filter(x=>x.hp>0&&x.hp/x.maxHp<.7).sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp);
+      if(targets.length){
+        const t=targets[0],amount=8+Math.floor(a.atk*.35);
+        t.hp=Math.min(t.max||t.maxHp,t.hp+amount);
+        addLog('💚 '+a.name+' лечит '+(t===S.p?'тебя':t.name)+' на '+amount,'good');
+      }else{
+        const d=Math.max(1,Math.floor(a.atk-enemy().def*.35));
+        enemy().hp=Math.max(0,enemy().hp-d);addLog(a.icon+' '+a.name+' наносит '+d+' урона','combat');
+      }
+    }else{
+      let mult=1,crit=false;
+      if(a.skill==='crit'){crit=R.chance(.3);if(crit)mult=1.8}
+      if(a.skill==='rage'&&a.hp/a.maxHp<.5)mult=1.5;
+      const d=Math.max(1,Math.floor(a.atk*mult-enemy().def*.45+R.next()*3));
+      enemy().hp=Math.max(0,enemy().hp-d);
+      addLog(a.icon+' '+a.name+' наносит '+d+(crit?' критического':'')+' урона','combat');
+      if(a.skill==='burn'&&R.chance(.65))addStatus(enemy(),'burn',2);
+      if(a.skill==='poison'&&R.chance(.65))addStatus(enemy(),'poison',2);
+    }
+    if(enemy().hp<=0){winCombat();return}
+  }
+}
+function allyGuard(){
+  if(!S.allies?.length)return;
+  const living=S.allies.filter(a=>a.hp>0);
+  if(!living.length)return;
+  const target=R.pick(living);
+  if(target.hp/target.maxHp<.45){
+    target.hp=Math.min(target.maxHp,target.hp+5);
+  }
+}
+/* Добавляем союзников только в состояние нового забега. */
+const BASE_FRESH_TAVERN=fresh;
+fresh=function(){
+  const s=BASE_FRESH_TAVERN();
+  s.allies=[];
+  return s;
+};
+/* Союзники действуют после игрока и до хода врага. */
+const BASE_END_PLAYER_TURN_TAVERN=endPlayerTurn;
+endPlayerTurn=function(){
+  if(S.screen!=='combat'||!S.combat)return BASE_END_PLAYER_TURN_TAVERN();
+  allyTurn();
+  if(S.screen!=='combat'||!S.combat||S.combat.over)return;
+  if(enemy()?.hp<=0){winCombat();return;}
+  BASE_END_PLAYER_TURN_TAVERN();
+};
+/* В городе появляется только новая кнопка Таверны. */
+const BASE_CITY_SCREEN_TAVERN=cityScreen;
+cityScreen=function(){
+  let html=BASE_CITY_SCREEN_TAVERN();
+  const tavernRe=/<button class="card cityBuilding" onclick="openTavern\(\)"><span class="big">🍺<\/span><b>Таверна<\/b><span class="small muted">Наём союзников<\/span><\/button>/g;
+  html=html.replace(tavernRe,'');
+  return html.replace(
+    '<button class="card cityBuilding" onclick="cityLocked(\'🏋️ Тренировочный двор\')">',
+    '<button class="card cityBuilding" onclick="openTavern()"><span class="big">🍺</span><b>Таверна</b><span class="small muted">Наём союзников</span></button><button class="card cityBuilding" onclick="cityLocked(\'🏋️ Тренировочный двор\')">'
+  );
+};
+function openTavern(){
+  openModal(tavernScreen());
+}
+/* Показываем союзников в бою. */
+const BASE_COMBAT_SCREEN_TAVERN=combatScreen;
+combatScreen=function(){
+  const base=BASE_COMBAT_SCREEN_TAVERN();
+  if(!S.allies?.length)return base;
+  return base.replace('<div class="card"><h3>Действия</h3>',allyHTML()+'<div class="card"><h3>Действия</h3>');
+}
+
+/* ---------- Share / Transfer ---------- */
+function encodeShareData(){
+  const data={v:1,run:S,meta:META};
+  const json=JSON.stringify(data);
+  let bin='';
+  for(let i=0;i<json.length;i+=0x8000)bin+=unescape(encodeURIComponent(json.slice(i,i+0x8000)));
+  return btoa(bin);
+}
+function decodeShareData(code){
+  const bin=atob(String(code).trim());
+  let out='';
+  for(let i=0;i<bin.length;i+=0x8000)out+=decodeURIComponent(escape(bin.slice(i,i+0x8000)));
+  return JSON.parse(out);
+}
+function exportShare(){
+  save();
+  const code=encodeShareData();
+  openModal(`<h2>📤 Передать игру</h2><p class="small muted">Скопируй этот код и отправь другому человеку. Он сможет импортировать твой текущий забег и мета-прогрессию.</p><textarea id="shareOut" style="width:100%;height:150px;background:#080d17;border:1px solid #33415d;color:white;border-radius:10px;padding:10px;resize:vertical">${code}</textarea><button class="btn goodBtn" onclick="navigator.clipboard?.writeText(document.getElementById('shareOut').value).then(()=>toast('Код скопирован')).catch(()=>toast('Выдели код и скопируй вручную'))">📋 Скопировать код</button><button class="btn" onclick="closeModal()">Закрыть</button>`);
+  setTimeout(()=>document.getElementById('shareOut')?.select(),0);
+}
+function importShare(){
+  openModal(`<h2>📥 Получить игру</h2><p class="small muted">Вставь код, который тебе отправил другой игрок.</p><textarea id="shareIn" style="width:100%;height:150px;background:#080d17;border:1px solid #33415d;color:white;border-radius:10px;padding:10px;resize:vertical" placeholder="Вставь код сюда"></textarea><button class="btn primary" onclick="applyShare(document.getElementById('shareIn').value)">▶️ Загрузить игру</button><button class="btn" onclick="closeModal()">Отмена</button>`);
+}
+function applyShare(code){
+  try{
+    const d=decodeShareData(code);
+    if(!d||d.v!==1||!d.run||!d.meta)throw new Error('bad share');
+    S=d.run;
+    restoreSavedEvent();
+    META=d.meta;
+    metaSave(META);
+    save();
+    R=RNG(S.seed||'boot');
+    if(S.p)recomputeBuild();
+    closeModal();
+    render();
+    toast('Игра загружена');
+  }catch(e){toast('Неверный или повреждённый код')}
+}
+/* ---------- Render ---------- */
+function screen(){
+  switch(S.screen){
+    case 'city':return cityScreen();
+    case 'start':return startScreen();
+    case 'map':return mapScreen();
+    case 'combat':return combatScreen();
+    case 'postcombat':return postCombatScreen();
+    case 'reward':return rewardScreen();
+    case 'camp':return campScreen();
+    case 'shop':return shopScreen();
+    case 'risk':return riskScreen();
+    case 'event':return eventScreen();
+    case 'victory':return endScreen(true);
+    case 'defeat':return endScreen(false);
+    default:return cityScreen()
+  }
+}
+function render(){
+  if(S.p)recomputeBuild();
+  const app=document.getElementById('app');
+  if(!app)return;
+  app.innerHTML=header()+`<main id="screen">${screen()}</main><button class="floatingMenu" onclick="menu()" aria-label="Меню">☰</button>`;
+}
+render();
+
+/* ---------- Android/WebView touch activation ---------- */
+/* Native click dispatch can be unreliable in some Android WebViews.
+   For a real tap on a button, invoke its existing inline action directly.
+   No game logic is changed; this only normalizes touch delivery. */
+(function(){
+  let touchButton=null, startX=0, startY=0, moved=false;
+  document.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1){touchButton=null;return}
+    const t=e.touches[0], el=t.target.closest && t.target.closest('button');
+    touchButton=el||null; startX=t.clientX; startY=t.clientY; moved=false;
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!touchButton||!e.touches.length)return;
+    const t=e.touches[0];
+    if(Math.abs(t.clientX-startX)>10||Math.abs(t.clientY-startY)>10)moved=true;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    const el=touchButton; touchButton=null;
+    if(!el||moved||el.disabled)return;
+    if(!el.isConnected)return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof el.onclick==='function') el.onclick();
+  },{passive:false});
+})();
+
+/* ---------- Keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if(S.screen!=='combat')return;
+  if(e.key==='1')playerAttack();
+  if(e.key==='2')useSkill(S.skills[0]);
+  if(e.key==='3')useSkill(S.skills[1]);
+  if(e.key==='4')useSkill(S.skills[2]);
+  if(e.key==='5')defend();
+});
+
+/* ============================================================
+   ПЛАТНОЕ DLC v1 — ПРОБУЖДЕНИЕ БЕЗДНЫ
+   Доступ открывается только после серверной проверки покупки.
+   ============================================================ */
+const DLC_ID='abyss-awakening';
+const DLC_PRICE_RUB=300;
+const DLC_API='https://chronicles-of-the-abyss-dlc-api.vercel.app';
+
+function dlcUnlocked(){
+  ensureMeta();
+  return !!(META.dlc&&META.dlc[DLC_ID]&&META.dlc[DLC_ID].unlocked);
+}
+function setDlcUnlocked(code){
+  ensureMeta();
+  META.dlc=META.dlc||{};
+  META.dlc[DLC_ID]={unlocked:true,activatedAt:Date.now(),code:String(code||'')};
+  metaSave(META);
+}
+function openDlcActivation(){
+  openModal(`<h2>🌑 Пробуждение Бездны</h2>
+  <p class="muted">Платное DLC за ${DLC_PRICE_RUB} ₽. После покупки на сайте ты получаешь код активации.</p>
+  <input id="dlcCode" autocomplete="off" placeholder="ABYSS-...">
+  <button class="btn primary" onclick="activateDlc(document.getElementById('dlcCode').value)">🔓 Активировать DLC</button>
+  <button class="btn" onclick="window.open('https://demin6632-del.github.io/chronicles-of-the-abyss-site/dlc.html','_blank')">🛒 Купить DLC — ${DLC_PRICE_RUB} ₽</button>
+  <div class="small muted">Код проверяется сервером. После успешной активации DLC сохраняется на этом устройстве.</div>
+  <button class="btn" onclick="closeModal()">Закрыть</button>`);
+}
+async function activateDlc(code){
+  code=String(code||'').trim();
+  if(!code){toast('Введи код активации.');return}
+  const b=document.querySelector('#modalBack .primary');
+  if(b){b.disabled=true;b.textContent='⏳ Проверка...'}
+  try{
+    const r=await fetch(DLC_API+'/api/activate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(r.ok&&d.valid&&d.dlc_id===DLC_ID){
+      setDlcUnlocked(code);
+      awardAchievement('dlcAwakened');
+      closeModal();
+      toast('🌑 DLC «Пробуждение Бездны» активировано!');
+      render();
+    }else{
+      toast(d.error||'Код недействителен или покупка не подтверждена.');
+      if(b){b.disabled=false;b.textContent='🔓 Активировать DLC'}
+    }
+  }catch(e){
+    toast('Не удалось связаться с сервером активации. Проверь интернет и попробуй снова.');
+    if(b){b.disabled=false;b.textContent='🔓 Активировать DLC'}
+  }
+}
+
+Object.assign(CLASSES,{awakened:{name:'Пробуждённый',icon:'🌑',hp:96,mp:64,atk:13,def:5,tags:['magic','risk','combo'],desc:'Герой, коснувшийся ядра Бездны. Использует разломы, эхо и силу за счёт собственного здоровья.',skills:['rift','voidpulse','echo','devour','collapse'],dlc:DLC_ID}});
+Object.defineProperty(CLASSES,'awakened',{value:CLASSES.awakened,enumerable:false,writable:true,configurable:true});
+Object.assign(SKILLS,{
+  rift:{name:'Разлом',cost:12,tag:'magic',tags:['magic','risk'],desc:'1.7× магический урон + замедление на 2 хода.',base:1.7,dlc:DLC_ID},
+  voidpulse:{name:'Импульс Бездны',cost:10,tag:'magic',tags:['magic','burn','poison'],desc:'1.45× магический урон + случайный негативный эффект.',base:1.45,dlc:DLC_ID},
+  echo:{name:'Эхо Бездны',cost:9,tag:'combo',tags:['combo','magic'],desc:'2 удара по 0.75×; +2 комбо и +2 MP.',base:.75,dlc:DLC_ID},
+  devour:{name:'Поглощение',cost:14,tag:'risk',tags:['risk','heal'],desc:'1.5× урон; лечит на 15% нанесённого урона.',base:1.5,dlc:DLC_ID},
+  collapse:{name:'Схлопывание',cost:18,tag:'risk',tags:['risk','magic','combo'],desc:'2.5× магический урон; теряешь 6% max HP. Сильнее по врагу со статусом.',base:2.5,dlc:DLC_ID}
+});
+Object.assign(SUBCLASSES,{awakened:{
+  voidwalker:{name:'Ходок Бездны',icon:'🕳️',desc:'Сила растёт вместе с риском.',tags:['risk','magic'],bonus:{magic:5,hp:-4},dlc:DLC_ID},
+  echoLord:{name:'Повелитель Эха',icon:'🌌',desc:'Комбо превращается в магическую силу.',tags:['combo','magic'],bonus:{mp:12,crit:.03},dlc:DLC_ID}
+}});
+
+const DLC_ITEMS=[
+  {id:'riftblade',name:'Клинок Разлома',slot:'weapon',rarity:'epic',tags:['magic','risk'],atk:6,magic:3,desc:'+6 ATK, +3 MAGIC; урон навыков +5%.',dlc:DLC_ID,skillMul:.05},
+  {id:'voidstaff',name:'Посох Пустого Света',slot:'weapon',rarity:'epic',tags:['magic','burn'],magic:9,desc:'+9 MAGIC; горение от навыков +1.',dlc:DLC_ID,skillBurn:1},
+  {id:'echoDagger',name:'Эхо-кинжал',slot:'weapon',rarity:'rare',tags:['combo','crit'],atk:4,crit:.06,desc:'+4 ATK, +6% CRIT; при комбо 5+ ещё +10% урона.',dlc:DLC_ID,comboMul:.10},
+  {id:'abyssArmor',name:'Панцирь Пробуждения',slot:'armor',rarity:'epic',tags:['defense','risk'],def:6,desc:'+6 DEF; при HP ниже 40% получаемый урон -10%.',dlc:DLC_ID,lowHpDef:.10},
+  {id:'fractureMail',name:'Кольчуга Трещин',slot:'armor',rarity:'rare',tags:['bleed','magic'],def:4,magic:3,desc:'+4 DEF, +3 MAGIC; кровоточащие враги получают +10% урона.',dlc:DLC_ID,bleedMul:.10},
+  {id:'voidMantle',name:'Мантия Пустоты',slot:'armor',rarity:'legendary',def:3,magic:10,desc:'+10 MAGIC, +3 DEF; каждый третий ход +3 MP.',dlc:DLC_ID,turnMana:3},
+  {id:'awakeningAmulet',name:'Амулет Пробуждения',slot:'accessory',rarity:'epic',tags:['heal','risk'],hp:10,desc:'+10 max HP; лечение навыками +20%.',dlc:DLC_ID,healMul:.20},
+  {id:'echoRing',name:'Кольцо Эха',slot:'accessory',rarity:'rare',tags:['combo','magic'],magic:4,desc:'+4 MAGIC; каждый навык с 2+ комбо возвращает 1 MP.',dlc:DLC_ID,echoMp:1},
+  {id:'riftBoots',name:'Сапоги Разлома',slot:'accessory',rarity:'rare',tags:['risk','combo'],crit:.05,desc:'+5% CRIT; первый навык в бою наносит +20% урона.',dlc:DLC_ID,firstSkill:.20},
+  {id:'abyssCore',name:'Ядро Пробуждения',slot:'accessory',rarity:'legendary',tags:['magic','risk','summon'],magic:7,atk:3,desc:'+3 ATK, +7 MAGIC; при победе над элитой +5% max HP до конца забега.',dlc:DLC_ID,eliteHp:.05}
+];
+ITEMS.push(...DLC_ITEMS);
+const DLC_RELICS=[
+  {id:'riftHeart',name:'Сердце Разлома',rarity:'epic',tags:['magic','risk'],desc:'Навыки наносят +12% урона, но их стоимость MP +1.',dlc:DLC_ID},
+  {id:'echoCrown',name:'Корона Эха',rarity:'legendary',tags:['combo','magic'],desc:'При комбо 5+ каждый навык получает +25% урона.',dlc:DLC_ID},
+  {id:'voidEye',name:'Око Пробуждения',rarity:'legendary',tags:['risk','heal'],desc:'Один раз за бой при HP ≤25% полностью снимает один негативный статус и лечит 18% max HP.',dlc:DLC_ID},
+  {id:'fractureShard',name:'Осколок Трещины',rarity:'rare',tags:['bleed','risk'],desc:'Криты по кровоточащим целям добавляют 1 кровотечение.',dlc:DLC_ID},
+  {id:'abyssLantern',name:'Фонарь Бездны',rarity:'rare',tags:['magic','burn','poison'],desc:'Каждый первый негативный эффект на враге в бою получает +1 ход.',dlc:DLC_ID},
+  {id:'echoStone',name:'Камень Эха',rarity:'epic',tags:['combo','heal'],desc:'При комбо 4+ каждый третий навык лечит 4% max HP.',dlc:DLC_ID},
+  {id:'voidAnchor',name:'Якорь Пустоты',rarity:'epic',tags:['defense','risk'],desc:'Когда блок поглощает удар полностью, получаешь +2 MP.',dlc:DLC_ID},
+  {id:'awakeningSeal',name:'Печать Пробуждения',rarity:'legendary',tags:['magic','combo','risk'],desc:'За каждый активный статус на враге +6% урона навыков, максимум +30%.',dlc:DLC_ID}
+];
+RELICS.push(...DLC_RELICS);
+const DLC_ENEMIES=[
+  {id:'riftStalker',name:'Сталкер Разлома',hp:82,atk:17,def:4,gold:48,pattern:['attack','slow','crit'],dlc:DLC_ID},
+  {id:'voidSeer',name:'Провидец Пустоты',hp:76,atk:15,def:5,gold:52,pattern:['burn','poison','heal'],dlc:DLC_ID},
+  {id:'echoDevourer',name:'Пожиратель Эха',hp:105,atk:18,def:6,gold:65,pattern:['block','stun','attack'],dlc:DLC_ID}
+];
+ENEMIES.push(...DLC_ENEMIES);
+const DLC_BOSS={id:'awakeningAvatar',name:'Аватар Пробуждения',hp:330,atk:27,def:9,gold:240,phases:3,skills:['special','burn','crit','heal'],dlc:DLC_ID};
+BOSSES.push(DLC_BOSS);
+const DLC_EVENTS=[
+  {name:'Сломанный портал',desc:'Разлом предлагает короткий путь за часть жизненной силы.',actions:[['🕳️ -15 HP → +100 золота',()=>{S.p.hp=Math.max(1,S.p.hp-15);S.gold+=100;addLog('🕳️ Портал отдал тебе золото.','good')}],['🌌 -10 max HP → редкая реликвия',()=>{S.p.max=Math.max(1,S.p.max-10);S.p.hp=Math.min(S.p.hp,S.p.max);giveRelic('rare')}],['🚪 Уйти',()=>{}]],dlc:DLC_ID},
+  {name:'Хор Эха',desc:'Голоса обещают силу, если ты выдержишь их ритм.',actions:[['⚡ +3 комбо → -8 HP',()=>{S.p.combo=Math.min(9,S.p.combo+3);S.p.hp=Math.max(1,S.p.hp-8)}],['💧 +12 MP → получить проклятие',()=>{S.p.mp=Math.min(S.p.maxmp,S.p.mp+12);addCurse()}],['🚪 Уйти',()=>{}]],dlc:DLC_ID},
+  {name:'Око Пустоты',desc:'Оно показывает один возможный исход твоего похода.',actions:[['👁️ Увидеть силу → +15% ATK на текущий бой',()=>{S.p.tempDlcAtk=.15;addLog('👁️ Око усилило следующий бой.','good')}],['💎 Заплатить 30 золота → легендарная реликвия',()=>{if(S.gold>=30){S.gold-=30;giveRelic('legendary')}else toast('Не хватает золота.')}],['🚪 Уйти',()=>{}]],dlc:DLC_ID},
+  {name:'Кузница Трещин',desc:'Металл здесь помнит удары тех, кто прошёл Бездну.',actions:[['🔨 Улучшить случайный предмет',()=>{const i=R.int(S.inventory.length);if(S.inventory.length)forgeItem(i);else toast('Нет предметов.')}],['🔥 Обменять 15 HP на 40 золота',()=>{S.p.hp=Math.max(1,S.p.hp-15);S.gold+=40}],['🚪 Уйти',()=>{}]],dlc:DLC_ID},
+  {name:'Последнее пробуждение',desc:'Бездны становится больше, но и ты меняешься вместе с ней.',actions:[['🌑 +20 max HP → +1 проклятие',()=>{S.p.max+=20;S.p.hp=Math.min(S.p.max,S.p.hp+20);addCurse()}],['⚔️ +2 ATK → -20 max HP',()=>{S.p.atk+=2;S.p.max=Math.max(1,S.p.max-20);S.p.hp=Math.min(S.p.hp,S.p.max)}],['🚪 Уйти',()=>{}]],dlc:DLC_ID}
+];
+EVENTS.push(...DLC_EVENTS);
+Object.assign(ACHIEVEMENTS,{dlcAwakened:{name:'Пробуждение',desc:'Активировать DLC «Пробуждение Бездны».',pts:20,dlc:DLC_ID},dlcClass:{name:'Новая грань',desc:'Завершить забег Пробуждённым.',pts:35,dlc:DLC_ID},dlcBoss:{name:'Лик Пробуждения',desc:'Победить Аватара Пробуждения.',pts:45,dlc:DLC_ID},dlcBuild:{name:'Эхо и разлом',desc:'Завершить забег с активной синергией DLC.',pts:30,dlc:DLC_ID},dlcCollector:{name:'Архив пробуждения',desc:'Собрать 5 разных предметов или реликвий DLC.',pts:40,dlc:DLC_ID}});
+CODEX_ENEMIES.push(...DLC_ENEMIES,DLC_BOSS);
+
+const BASE_DLC_GIVE_RELIC=giveRelic;
+giveRelic=function(rarity){if(dlcUnlocked())return BASE_DLC_GIVE_RELIC(rarity);const original=RELICS.slice();for(let i=RELICS.length-1;i>=0;i--)if(RELICS[i].dlc===DLC_ID)RELICS.splice(i,1);try{return BASE_DLC_GIVE_RELIC(rarity)}finally{RELICS.splice(0,RELICS.length,...original)}};
+const BASE_DLC_START_COMBAT=startCombat;
+startCombat=function(elite=false){const original=ENEMIES.slice();if(!dlcUnlocked())for(let i=ENEMIES.length-1;i>=0;i--)if(ENEMIES[i].dlc===DLC_ID)ENEMIES.splice(i,1);try{return BASE_DLC_START_COMBAT(elite)}finally{ENEMIES.splice(0,ENEMIES.length,...original)}};
+const BASE_DLC_START_BOSS=startBoss;
+startBoss=function(){const original=BOSSES.slice();if(!dlcUnlocked())for(let i=BOSSES.length-1;i>=0;i--)if(BOSSES[i].dlc===DLC_ID)BOSSES.splice(i,1);try{return BASE_DLC_START_BOSS()}finally{BOSSES.splice(0,BOSSES.length,...original)}};
+const BASE_DLC_MAKE_REWARDS=makeRewards;
+makeRewards=function(count){const oi=ITEMS.slice(),or=RELICS.slice();if(!dlcUnlocked()){for(let i=ITEMS.length-1;i>=0;i--)if(ITEMS[i].dlc===DLC_ID)ITEMS.splice(i,1);for(let i=RELICS.length-1;i>=0;i--)if(RELICS[i].dlc===DLC_ID)RELICS.splice(i,1)}try{return BASE_DLC_MAKE_REWARDS(count)}finally{ITEMS.splice(0,ITEMS.length,...oi);RELICS.splice(0,RELICS.length,...or)}};
+const BASE_DLC_ENTER_NODE=enterNode;
+enterNode=function(n){const oe=EVENTS.slice();if(!dlcUnlocked())for(let i=EVENTS.length-1;i>=0;i--)if(EVENTS[i].dlc===DLC_ID)EVENTS.splice(i,1);try{return BASE_DLC_ENTER_NODE(n)}finally{EVENTS.splice(0,EVENTS.length,...oe)}};
+
+const BASE_DLC_START_RUN=startRun;
+startRun=function(cls,asc,seed,subclass='auto',loadout='none',modifier='normal'){if(CLASSES[cls]?.dlc===DLC_ID&&!dlcUnlocked()){openDlcActivation();return}BASE_DLC_START_RUN(cls,asc,seed,subclass,loadout,modifier);const sub=SUBCLASSES[cls]?.[S.profile?.subclass];if(sub?.bonus?.crit&&S.p)S.p.crit+=sub.bonus.crit;if(S.p)S.p.dlcFirstSkillUsed=false;recomputeBuild();save();render()};
+
+const BASE_DLC_APPLY_ITEM=applyItem;
+applyItem=function(it){BASE_DLC_APPLY_ITEM(it);if(it?.dlc===DLC_ID&&it.hp&&S.p){const m=RARITY[it.rarity]?.mul||1,hp=Math.round(it.hp*m);S.p.max+=hp;S.p.hp+=hp;it.__bonus=it.__bonus||{};it.__bonus.hp=hp}};
+const BASE_DLC_SCRAP_ITEM=scrapItem;
+scrapItem=function(i){const it=S.inventory[i];if(!it)return;const hp=it.__bonus?.hp||0;BASE_DLC_SCRAP_ITEM(i);if(hp&&S.p){S.p.max=Math.max(1,S.p.max-hp);S.p.hp=Math.min(S.p.hp,S.p.max)}save()};
+
+const BASE_DLC_USE_SKILL=useSkill;
+useSkill=function(id){const sk=SKILLS[id];if(!sk||sk.dlc!==DLC_ID)return BASE_DLC_USE_SKILL(id);if(!dlcUnlocked()){toast('Этот контент доступен после активации DLC.');return}if(!canAct())return;const p=S.p,e=enemy(),effectiveCost=sk.cost+(hasRelic('riftHeart')?1:0);if(p.mp<effectiveCost){toast('Недостаточно MP');return}p.mp-=effectiveCost;let d=0,skillBonus=1;if(id==='rift'){d=dmgCalc(p,e,sk.base,true)*skillBonus;dealPlayerDamage(Math.floor(d),'Разлом');addStatus(e,'slow',2)}else if(id==='voidpulse'){d=dmgCalc(p,e,sk.base,true)*skillBonus;dealPlayerDamage(Math.floor(d),'Импульс Бездны');const st=R.pick(['burn','poison','bleed']);addStatus(e,st,3+(st==='burn'&&hasItem('voidstaff')?1:0));if(hasRelic('abyssLantern'))addStatus(e,st,4)}else if(id==='echo'){for(let i=0;i<2;i++){d=dmgCalc(p,e,sk.base,true)*skillBonus;if(p.combo>=5&&hasRelic('echoCrown'))d*=1.25;dealPlayerDamage(Math.floor(d),'Эхо Бездны');if(e.hp<=0)break}p.combo=Math.min(9,p.combo+2);p.mp=Math.min(p.maxmp,p.mp+2+(hasItem('echoRing')?1:0))}else if(id==='devour'){d=dmgCalc(p,e,sk.base)*skillBonus;dealPlayerDamage(Math.floor(d),'Поглощение');const healed=Math.floor(Math.max(0,d)*.15*(1+(hasItem('awakeningAmulet')?.20:0)));if(healed>0)heal(healed)}else if(id==='collapse'){d=dmgCalc(p,e,sk.base,true)*skillBonus;if((e.statuses||[]).length)d*=1.30;if(hasRelic('awakeningSeal'))d*=1+Math.min(.30,(e.statuses||[]).length*.06);if(p.combo>=5&&hasRelic('echoCrown'))d*=1.25;dealPlayerDamage(Math.floor(d),'Схлопывание');p.hp=Math.max(1,p.hp-Math.ceil(p.max*.06))}if(hasItem('riftBoots'))p.dlcFirstSkillUsed=true;if(e.hp>0)endPlayerTurn();else winCombat()};
+
+const BASE_DLC_DMG_CALC=dmgCalc;
+dmgCalc=function(att,def,mult=1,magic=false){let d=BASE_DLC_DMG_CALC(att,def,mult,magic);if(att===S.p&&dlcUnlocked()){if(magic){if(hasItem('riftblade'))d*=1.05;if(hasRelic('riftHeart'))d*=1.12;if(hasRelic('echoCrown')&&S.p.combo>=5)d*=1.25;if(hasRelic('awakeningSeal'))d*=1+Math.min(.30,(def.statuses||[]).length*.06)}if(S.p.tempDlcAtk){d*=1+S.p.tempDlcAtk;S.p.tempDlcAtk=0}if(hasItem('echoDagger')&&S.p.combo>=5)d*=1.10;if(hasItem('riftBoots')&&!S.p.dlcFirstSkillUsed)d*=1.20}return Math.max(1,Math.floor(d))};
+const BASE_DLC_END_TURN=endPlayerTurn;
+endPlayerTurn=function(){BASE_DLC_END_TURN();if(dlcUnlocked()&&S.screen==='combat'&&S.p){if(hasItem('voidMantle')&&S.combat.turn%3===0)S.p.mp=Math.min(S.p.maxmp,S.p.mp+3);if(hasItem('echoRing')&&S.p.combo>=2)S.p.mp=Math.min(S.p.maxmp,S.p.mp+1);if(hasRelic('echoStone')&&S.p.combo>=4&&S.combat.turn%3===0)heal(Math.floor(S.p.max*.04))}};
+const BASE_DLC_WIN_COMBAT=winCombat;
+winCombat=function(){const wasDlcEnemy=!!enemy()?.dlc;const beforeInventory=(S.inventory||[]).filter(x=>x.dlc===DLC_ID).length;BASE_DLC_WIN_COMBAT();if(dlcUnlocked()&&wasDlcEnemy){addLog('🌑 Победа над врагом DLC.','good');if(hasItem('abyssCore')&&enemy()?.elite){S.p.max=Math.floor(S.p.max*1.05);S.p.hp=Math.min(S.p.max,S.p.hp+5)}}if(dlcUnlocked()&&beforeInventory>=5)awardAchievement('dlcCollector')};
+const BASE_DLC_SET_INTENT=setIntent;
+setIntent=function(){const e=enemy();if(e?.id==='awakeningAvatar'&&dlcUnlocked()){const pool=e.phase===1?['attack','special','burn']:e.phase===2?['crit','special','heal']:['special','crit','burn','attack'];e.intent=R.pick(pool);return}BASE_DLC_SET_INTENT()};
+
+const BASE_DLC_EXPANDED_CITY=expandedCityScreen;
+expandedCityScreen=function(){const h=BASE_DLC_EXPANDED_CITY();const box=dlcUnlocked()?`<div class="card"><h2>🌑 Пробуждение Бездны</h2><div class="cityStatus good">✓ DLC активно</div><button class="btn" onclick="setScreen('start');render()">🌑 Начать забег Пробуждённым</button></div>`:`<div class="card"><h2>🌑 Пробуждение Бездны</h2><div class="cityStatus">Платное DLC • ${DLC_PRICE_RUB} ₽</div><button class="btn primary" onclick="openDlcActivation()">🔓 Купить / активировать DLC</button><div class="small muted">Новый класс, подклассы, навыки, предметы, реликвии, враги, босс, события, достижения и записи кодекса.</div></div>`;return h+box};
+const BASE_DLC_START_SCREEN=startScreen;
+startScreen=function(){const h=BASE_DLC_START_SCREEN();const extra=dlcUnlocked()?`<div class="card"><h2>🌑 DLC: Пробуждение Бездны</h2><div class="cityStatus good">✓ Активировано</div><button class="btn primary" onclick="openStart('awakened')">🌑 Выбрать Пробуждённого</button></div>`:`<div class="card"><h2>🌑 DLC: Пробуждение Бездны</h2><div class="cityStatus">🔒 Заблокировано • ${DLC_PRICE_RUB} ₽</div><button class="btn" onclick="openDlcActivation()">🔓 Купить / активировать</button></div>`;return h+extra};
+const BASE_DLC_OPEN_START=openStart;
+openStart=function(cls){if(CLASSES[cls]?.dlc===DLC_ID&&!dlcUnlocked()){openDlcActivation();return}return BASE_DLC_OPEN_START(cls)};
+const BASE_DLC_END_SCREEN=endScreen;
+endScreen=function(win){const h=BASE_DLC_END_SCREEN(win);if(dlcUnlocked()&&win&&S.cls==='awakened'){if((SYNERGIES||[]).some(x=>tagCount(x.tag)>=x.need&&['magic','combo','risk'].includes(x.tag)))awardAchievement('dlcBuild');if(S.inventory.filter(x=>x.dlc===DLC_ID).length+S.relics.filter(x=>x.dlc===DLC_ID).length>=5)awardAchievement('dlcCollector');awardAchievement('dlcClass')}return h};
+const BASE_DLC_CODEX=codexScreen;
+codexScreen=function(){if(dlcUnlocked())return BASE_DLC_CODEX();const original=CODEX_ENEMIES.slice();for(let i=CODEX_ENEMIES.length-1;i>=0;i--)if(CODEX_ENEMIES[i].dlc===DLC_ID)CODEX_ENEMIES.splice(i,1);let h;try{h=BASE_DLC_CODEX()}finally{CODEX_ENEMIES.splice(0,CODEX_ENEMIES.length,...original)}return h+`<div class="card"><h2>🌑 Пробуждение Бездны</h2><div class="cityStatus">🔒 Записи DLC скрыты до активации.</div><button class="btn" onclick="openDlcActivation()">🔓 Активировать DLC</button></div>`};
+
+</script></body></html>
