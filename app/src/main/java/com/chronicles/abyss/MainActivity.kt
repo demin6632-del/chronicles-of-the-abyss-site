@@ -23,8 +23,4 @@ class MainActivity : Activity() {
 
         setContentView(webView)
     }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-    }
 }
