@@ -13,12 +13,13 @@ class MainActivity : Activity() {
 
         val webView = WebView(this)
 
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+
         webView.webViewClient = WebViewClient()
 
-        val settings: WebSettings = webView.settings
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-
+        // Загружает игру из assets
         webView.loadUrl("file:///android_asset/game.html")
 
         setContentView(webView)
