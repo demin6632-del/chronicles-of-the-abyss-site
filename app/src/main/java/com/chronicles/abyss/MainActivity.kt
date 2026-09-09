@@ -13,15 +13,18 @@ class MainActivity : Activity() {
 
         val webView = WebView(this)
 
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
-
         webView.webViewClient = WebViewClient()
 
-        // Загружает игру из assets
+        val settings: WebSettings = webView.settings
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+
         webView.loadUrl("file:///android_asset/game.html")
 
         setContentView(webView)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
     }
 }
