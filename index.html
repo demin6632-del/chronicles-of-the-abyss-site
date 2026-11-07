@@ -133,6 +133,24 @@ body:after{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;o
 @keyframes ctaGlow{0%,100%{box-shadow:0 5px 0 #4c873c,0 8px 18px rgba(140,227,107,.08)}50%{box-shadow:0 5px 0 #4c873c,0 8px 30px rgba(140,227,107,.32)}}
 @media(prefers-reduced-motion:reduce){body:after,.hero .actions .btn:first-child{animation:none!important}.hero>div:first-child.is-visible .eyebrow,.hero>div:first-child.is-visible h1,.hero>div:first-child.is-visible p,.hero>div:first-child.is-visible .actions{animation:none!important}}
 
+
+/* Мобильные устройства: заметные эффекты без наведения мышью */
+@media (max-width:700px) and (hover:none) and (pointer:coarse){
+  .pixel-art{animation:mobilePanelGlow 5s ease-in-out infinite}
+  .pixel-art:after{animation:worldShine 6s ease-in-out infinite}
+  .pixel-art .scene{animation:sceneFloat 3.2s ease-in-out infinite}
+  .pixel-art .sun{animation:sunPulse 2.4s ease-in-out infinite}
+  .card,.roadmap-card,.fact,.step,.shot{animation:mobileCardGlow 5.5s ease-in-out infinite}
+  .card:nth-child(2),.roadmap-card:nth-child(2),.step:nth-child(2){animation-delay:1s}
+  .card:nth-child(3),.roadmap-card:nth-child(3),.step:nth-child(3){animation-delay:2s}
+  .btn{transition:transform .18s,filter .18s,box-shadow .18s}
+  .btn:active,.card:active,.roadmap-card:active,.shot:active{transform:scale(.975);filter:brightness(1.12)}
+  .btn:not(.secondary):after{animation:mobileButtonShine 4s ease-in-out infinite}
+}
+@keyframes mobilePanelGlow{0%,100%{box-shadow:0 12px 35px rgba(0,0,0,.28),0 0 8px rgba(140,227,107,.08)}50%{box-shadow:0 16px 42px rgba(0,0,0,.32),0 0 28px rgba(140,227,107,.24)}}
+@keyframes mobileCardGlow{0%,100%{border-color:rgba(140,227,107,.24);box-shadow:0 5px 18px rgba(0,0,0,.12)}50%{border-color:rgba(140,227,107,.62);box-shadow:0 9px 25px rgba(0,0,0,.2),0 0 17px rgba(140,227,107,.1)}}
+@keyframes mobileButtonShine{0%,65%{left:-65%}90%,100%{left:140%}}
+
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"PixelSurvival","description":"Пиксельная survival-игра: сбор ресурсов, инвентарь, крафт, строительство и сохранения.","genre":["Survival","Sandbox"],"gamePlatform":"PC","operatingSystem":"Windows","inLanguage":"ru","url":"https://demin6632-del.github.io/chronicles-of-the-abyss-site/"}</script>
 </head>
