@@ -78,6 +78,21 @@ html.js .reveal.is-visible{opacity:1;transform:translateY(0)}
 @media(max-width:700px){header{margin:0 -16px;padding:12px 16px}.hero{min-height:0}.section{padding-top:34px}.cards{gap:12px}.card:hover,.shot:hover{transform:translateY(-3px)}nav a{font-size:13px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}html.js .reveal{opacity:1;transform:none}}
 
+
+/* Просмотр изображений на весь экран */
+.gallery .shot img{cursor:zoom-in}
+.image-lightbox{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,7,4,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.image-lightbox.open{display:flex;animation:lightboxFade .2s ease}
+.image-lightbox img{display:block;max-width:min(96vw,1500px);max-height:88vh;width:auto;height:auto;object-fit:contain;box-shadow:0 18px 70px rgba(0,0,0,.55);border:1px solid rgba(180,235,160,.28);border-radius:10px;cursor:zoom-out}
+.lightbox-close,.lightbox-prev,.lightbox-next{position:absolute;display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(190,240,170,.3);border-radius:12px;background:rgba(20,34,23,.86);color:#efffea;font-size:28px;line-height:1;cursor:pointer;transition:background .2s,transform .2s}
+.lightbox-close{top:18px;right:18px}.lightbox-prev{left:18px;top:50%;transform:translateY(-50%)}.lightbox-next{right:18px;top:50%;transform:translateY(-50%)}
+.lightbox-close:hover,.lightbox-prev:hover,.lightbox-next:hover{background:#294b2b;border-color:#8ce36b}
+.lightbox-prev:hover{transform:translateY(-50%) scale(1.06)}.lightbox-next:hover{transform:translateY(-50%) scale(1.06)}
+.lightbox-counter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#dcebd9;font-size:13px;background:rgba(10,18,12,.7);padding:6px 12px;border-radius:20px}
+body.lightbox-active{overflow:hidden}
+@keyframes lightboxFade{from{opacity:0}to{opacity:1}}
+@media(max-width:600px){.image-lightbox{padding:12px}.image-lightbox img{max-width:96vw;max-height:82vh}.lightbox-close{top:10px;right:10px}.lightbox-prev{left:8px}.lightbox-next{right:8px}.lightbox-close,.lightbox-prev,.lightbox-next{width:40px;height:40px;font-size:24px}}
+
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"PixelSurvival","description":"Пиксельная survival-игра: сбор ресурсов, инвентарь, крафт, строительство и сохранения.","genre":["Survival","Sandbox"],"gamePlatform":"PC","operatingSystem":"Windows","inLanguage":"ru","url":"https://demin6632-del.github.io/chronicles-of-the-abyss-site/"}</script>
 </head>
@@ -105,5 +120,30 @@ if('IntersectionObserver' in window){
  }),{threshold:.12});
  revealItems.forEach(el=>revealObserver.observe(el));
 }else{revealItems.forEach(el=>el.classList.add('is-visible'))}
+</script>
+
+<script>
+(()=>{
+ const images=[...document.querySelectorAll('.gallery .shot img')];
+ if(!images.length)return;
+ let current=0;
+ const box=document.createElement('div');
+ box.className='image-lightbox';
+ box.setAttribute('role','dialog');
+ box.setAttribute('aria-modal','true');
+ box.setAttribute('aria-label','Просмотр скриншотов');
+ box.innerHTML='<button class="lightbox-close" type="button" aria-label="Закрыть">×</button><button class="lightbox-prev" type="button" aria-label="Предыдущее фото">‹</button><img alt=""><button class="lightbox-next" type="button" aria-label="Следующее фото">›</button><div class="lightbox-counter"></div>';
+ document.body.appendChild(box);
+ const view=box.querySelector('img'),counter=box.querySelector('.lightbox-counter');
+ function show(index){current=(index+images.length)%images.length;const source=images[current];view.src=source.currentSrc||source.src;view.alt=source.alt||'Скриншот PixelSurvival';counter.textContent=(current+1)+' / '+images.length;}
+ function close(){box.classList.remove('open');document.body.classList.remove('lightbox-active');view.removeAttribute('src');}
+ function open(index){show(index);box.classList.add('open');document.body.classList.add('lightbox-active');}
+ images.forEach((img,index)=>{img.tabIndex=0;img.setAttribute('role','button');img.setAttribute('aria-label','Открыть изображение на весь экран');img.addEventListener('click',()=>open(index));img.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(index);}});});
+ box.querySelector('.lightbox-close').addEventListener('click',close);
+ box.querySelector('.lightbox-prev').addEventListener('click',()=>show(current-1));
+ box.querySelector('.lightbox-next').addEventListener('click',()=>show(current+1));
+ box.addEventListener('click',e=>{if(e.target===box)close();});
+ document.addEventListener('keydown',e=>{if(!box.classList.contains('open'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')show(current-1);if(e.key==='ArrowRight')show(current+1);});
+})();
 </script>
 </body></html>
