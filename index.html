@@ -111,6 +111,28 @@ body.lightbox-active{overflow:hidden}
 @keyframes lightboxFade{from{opacity:0}to{opacity:1}}
 @media(max-width:600px){.image-lightbox{padding:12px}.image-lightbox img{max-width:96vw;max-height:82vh}.lightbox-close{top:10px;right:10px}.lightbox-prev{left:8px}.lightbox-next{right:8px}.lightbox-close,.lightbox-prev,.lightbox-next{width:40px;height:40px;font-size:24px}}
 
+
+/* === Более заметные анимации PixelSurvival === */
+body:after{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;opacity:.28;background-image:radial-gradient(circle,rgba(176,239,139,.72) 1px,transparent 2px),radial-gradient(circle,rgba(130,207,113,.48) 1px,transparent 2px),radial-gradient(circle,rgba(231,246,170,.38) 1px,transparent 2px);background-size:115px 115px,173px 173px,241px 241px;background-position:0 0,55px 80px,120px 25px;animation:ambientDrift 38s linear infinite}
+.hero>div:first-child.is-visible .eyebrow{animation:heroSlide .7s both}
+.hero>div:first-child.is-visible h1{animation:heroSlide .85s .12s both}
+.hero>div:first-child.is-visible p{animation:heroSlide .85s .24s both}
+.hero>div:first-child.is-visible .actions{animation:heroSlide .85s .36s both}
+.hero .actions .btn:first-child{animation:ctaGlow 3.2s ease-in-out infinite}
+.pixel-art .scene{animation:sceneFloat 4s ease-in-out infinite}
+.sun{animation:sunPulse 3s ease-in-out infinite}
+.fact,.roadmap-card,.step{position:relative;overflow:hidden;transition:transform .3s,border-color .3s,box-shadow .3s}
+.fact:hover,.roadmap-card:hover,.step:hover{transform:translateY(-5px);border-color:#79bd62;box-shadow:0 14px 30px rgba(0,0,0,.24),0 0 20px rgba(140,227,107,.1)}
+.roadmap-card:after,.fact:after{content:"";position:absolute;top:0;left:-120%;width:70%;height:100%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(190,255,166,.07),transparent);transform:skewX(-18deg);transition:left .7s}
+.roadmap-card:hover:after,.fact:hover:after{left:150%}
+.shot img{will-change:transform}
+.btn:not(.secondary):after{content:"";position:absolute;top:-40%;left:-65%;width:35%;height:180%;background:rgba(255,255,255,.32);transform:rotate(22deg);transition:left .55s}
+.btn:not(.secondary):hover:after{left:140%}
+@keyframes ambientDrift{from{background-position:0 0,55px 80px,120px 25px}to{background-position:0 -500px,55px -650px,120px -800px}}
+@keyframes heroSlide{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ctaGlow{0%,100%{box-shadow:0 5px 0 #4c873c,0 8px 18px rgba(140,227,107,.08)}50%{box-shadow:0 5px 0 #4c873c,0 8px 30px rgba(140,227,107,.32)}}
+@media(prefers-reduced-motion:reduce){body:after,.hero .actions .btn:first-child{animation:none!important}.hero>div:first-child.is-visible .eyebrow,.hero>div:first-child.is-visible h1,.hero>div:first-child.is-visible p,.hero>div:first-child.is-visible .actions{animation:none!important}}
+
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"PixelSurvival","description":"Пиксельная survival-игра: сбор ресурсов, инвентарь, крафт, строительство и сохранения.","genre":["Survival","Sandbox"],"gamePlatform":"PC","operatingSystem":"Windows","inLanguage":"ru","url":"https://demin6632-del.github.io/chronicles-of-the-abyss-site/"}</script>
 </head>
@@ -133,7 +155,7 @@ body.lightbox-active{overflow:hidden}
 </div>
 <script>
 document.documentElement.classList.add('js');
-const revealItems=document.querySelectorAll('.hero>div,.section,.download,.updates,.card,.shot,.faq');
+const revealItems=document.querySelectorAll('.hero>div,.section,.download,.updates,.card,.shot,.faq,.fact,.roadmap-card,.step');
 revealItems.forEach((el,i)=>{el.classList.add('reveal');el.style.transitionDelay=(i%3)*70+'ms'});
 if('IntersectionObserver' in window){
  const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
