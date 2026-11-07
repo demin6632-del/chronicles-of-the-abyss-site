@@ -18,6 +18,66 @@
 <title>PixelSurvival — пиксельная survival-игра</title>
 <style>
 :root{color-scheme:dark;--bg:#0b100d;--panel:#141d17;--line:#2d4935;--green:#8ce36b;--muted:#b4c4b6}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 50% 0,#1b3522 0,#0b100d 55%);color:#f0f7f0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}.wrap{width:min(100% - 32px,1000px);margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 0}.logo{display:flex;align-items:center;font-weight:950;letter-spacing:.04em;font-size:20px}.logo span{color:var(--green)}nav{display:flex;gap:18px;flex-wrap:wrap}a{color:var(--green)}nav a{color:#d8e7da;text-decoration:none;font-size:14px}.hero{padding:70px 0 58px;display:grid;grid-template-columns:1.3fr .7fr;gap:36px;align-items:center}.eyebrow{color:var(--green);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:12px}.hero h1{font-size:clamp(42px,8vw,76px);line-height:1.02;letter-spacing:-.05em;margin:12px 0 20px}.hero p{font-size:18px;color:var(--muted);max-width:620px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.btn{display:inline-block;padding:13px 19px;border-radius:12px;background:var(--green);color:#102013;font-weight:900;text-decoration:none;border:1px solid var(--green)}.btn.secondary{background:transparent;color:#eef7ee;border-color:#4b6650}.pixel-art{min-height:270px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#182d1d,#101811);display:grid;place-items:center;overflow:hidden;position:relative}.pixel-art:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#8ce36b0b 1px,transparent 1px),linear-gradient(90deg,#8ce36b0b 1px,transparent 1px);background-size:22px 22px}.scene{position:relative;width:190px;height:190px;image-rendering:pixelated}.sun{position:absolute;width:48px;height:48px;right:12px;top:12px;background:#d7f18b;box-shadow:0 0 35px #a7e86a44}.tree{position:absolute;bottom:42px;left:24px;width:34px;height:78px;background:#6d472b;box-shadow:0 -28px 0 17px #4c9c46,0 -8px 0 29px #4c9c46}.tree:after{content:"";position:absolute;left:-20px;top:-24px;width:74px;height:12px;background:#68b75a}.ground{position:absolute;bottom:18px;left:0;right:0;height:30px;background:#426e39;box-shadow:0 12px 0 #28472b}.rock{position:absolute;bottom:48px;right:25px;width:38px;height:25px;background:#8a9b86;box-shadow:10px -8px 0 #a4b39e,-8px 4px 0 #657c68}.player{position:absolute;bottom:48px;left:100px;width:23px;height:30px;background:#e9c18b;box-shadow:0 -12px 0 -2px #523c2a,0 14px 0 -4px #638ce0}.section{padding:30px 0 20px}.section h2{font-size:clamp(26px,4vw,36px);margin:0 0 12px}.lead{color:var(--muted);max-width:720px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}.card{background:#141d17d9;border:1px solid var(--line);border-radius:17px;padding:22px}.card .icon{font-size:28px}.card h3{margin:10px 0 6px}.card p{margin:0;color:var(--muted)}.updates{margin:20px 0 54px}.update{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid #2d4935}.tag{align-self:flex-start;background:#203c25;color:var(--green);font-size:12px;font-weight:900;padding:5px 9px;border-radius:7px;white-space:nowrap}.update p{margin:3px 0 0;color:var(--muted)}.download{background:linear-gradient(120deg,#1d3b23,#142018);border:1px solid #426b43;border-radius:22px;padding:30px;margin:30px 0 55px}.download p{color:var(--muted)}.soon{display:inline-block;background:#2d4935;color:#c9f8b6;border-radius:9px;padding:7px 11px;font-weight:850}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}.shot{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#111a13}.shot img{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;background:#0b100d}.shot-art{height:170px;position:relative;overflow:hidden;background:linear-gradient(#203c2a 0 55%,#426e39 55% 100%);image-rendering:pixelated}.shot-art:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#b7e8a20d 1px,transparent 1px),linear-gradient(90deg,#b7e8a20d 1px,transparent 1px);background-size:16px 16px}.shot-art .tree{transform:scale(.75);transform-origin:bottom left;left:24px;bottom:25px}.shot-art .ground{bottom:0}.shot-art .rock{bottom:28px}.shot-art .player{bottom:28px}.shot-art.inventory{background:linear-gradient(#1b2a20,#101811)}.inventory-ui{position:absolute;left:18%;right:18%;top:20%;bottom:16%;border:2px solid #73906c;background:#18251b;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px}.inventory-ui span{border:1px solid #54704e;background:#263d28}.shot-caption{padding:13px 15px}.shot-caption b{display:block}.shot-caption p{color:var(--muted);font-size:13px;margin:4px 0 0}.notice{border:1px dashed #49684b;border-radius:12px;padding:12px 15px;color:var(--muted);font-size:13px}.faq{padding:14px 0;border-bottom:1px solid var(--line)}.faq summary{cursor:pointer;font-weight:800}.faq p{color:var(--muted)}footer{border-top:1px solid var(--line);padding:24px 0 34px;color:#8fa291;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}@media(max-width:700px){.gallery{grid-template-columns:1fr}.shot-art{height:200px}.hero{grid-template-columns:1fr;padding:44px 0}.pixel-art{min-height:220px}.cards{grid-template-columns:1fr}.hero h1{font-size:50px}nav{gap:10px}header{align-items:flex-start;flex-direction:column}}
+
+/* === PixelSurvival: живой пиксельный мир === */
+:root{--glow:rgba(140,227,107,.24);--gold:#f4c96b}
+body{overflow-x:hidden;background-color:#0a100c;background-image:radial-gradient(ellipse at 12% 12%,rgba(47,112,54,.22),transparent 34%),radial-gradient(ellipse at 88% 32%,rgba(25,91,62,.16),transparent 32%),linear-gradient(180deg,#0b130e,#090e0b 72%)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.16;background-image:linear-gradient(rgba(174,235,149,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(174,235,149,.08) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+.wrap{position:relative}
+header{position:sticky;top:0;z-index:20;margin:0 -16px;padding:14px 16px;background:rgba(9,16,11,.78);border-bottom:1px solid rgba(140,227,107,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.logo img{box-shadow:0 0 18px var(--glow);transition:transform .35s,box-shadow .35s;image-rendering:pixelated}
+.logo:hover img{transform:rotate(-7deg) scale(1.08);box-shadow:0 0 26px rgba(140,227,107,.48)}
+nav a{position:relative;padding:7px 0;transition:color .25s}
+nav a:after{content:"";position:absolute;left:0;right:100%;bottom:0;height:2px;background:var(--green);transition:right .25s}
+nav a:hover{color:var(--green)}nav a:hover:after{right:0}
+.hero{min-height:510px;position:relative}
+.hero>div:first-child{position:relative;z-index:1}
+.hero h1{text-shadow:0 7px 35px rgba(140,227,107,.12)}
+.eyebrow{display:inline-flex;align-items:center;gap:9px}
+.eyebrow:before{content:"";width:18px;height:3px;background:var(--green);box-shadow:0 0 12px var(--green)}
+.pixel-art{border-color:#456b49;box-shadow:0 20px 65px rgba(0,0,0,.28),inset 0 0 45px rgba(140,227,107,.08);transition:transform .45s,border-color .45s,box-shadow .45s}
+.pixel-art:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(190,255,166,.1) 50%,transparent 58%);transform:translateX(-70%);animation:worldShine 8s ease-in-out infinite}
+.pixel-art:hover{transform:translateY(-7px);border-color:var(--green);box-shadow:0 25px 70px rgba(0,0,0,.4),0 0 32px var(--glow)}
+.scene{animation:sceneFloat 5s ease-in-out infinite;filter:drop-shadow(0 12px 12px rgba(0,0,0,.3))}
+.sun{animation:sunPulse 4s ease-in-out infinite}
+.tree{filter:drop-shadow(0 0 8px rgba(84,183,75,.18))}
+.btn{position:relative;overflow:hidden;box-shadow:0 5px 0 #4c873c,0 10px 25px rgba(0,0,0,.2);transition:transform .2s,box-shadow .2s,filter .2s}
+.btn:hover{transform:translateY(-3px);filter:brightness(1.08);box-shadow:0 8px 0 #4c873c,0 14px 32px rgba(140,227,107,.18)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #4c873c}
+.btn.secondary{box-shadow:inset 0 0 0 1px rgba(140,227,107,.08)}
+.btn.secondary:hover{box-shadow:0 0 24px var(--glow),inset 0 0 0 1px var(--green)}
+.section{position:relative;padding-top:48px}
+.section h2{letter-spacing:-.035em}
+.cards{perspective:900px}
+.card{position:relative;overflow:hidden;transition:transform .3s,border-color .3s,background .3s,box-shadow .3s}
+.card:before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,var(--green),transparent);transform:translateX(-100%);transition:transform .5s}
+.card:hover{transform:translateY(-8px) rotateX(2deg);border-color:#77bb61;background:#18271c;box-shadow:0 18px 35px rgba(0,0,0,.28),0 0 24px rgba(140,227,107,.08)}
+.card:hover:before{transform:translateX(0)}
+.card .icon{display:inline-block;transition:transform .3s}
+.card:hover .icon{transform:translateY(-4px) scale(1.16)}
+.gallery{gap:18px}
+.shot{transition:transform .35s,border-color .35s,box-shadow .35s}
+.shot:hover{transform:translateY(-7px);border-color:var(--green);box-shadow:0 18px 38px rgba(0,0,0,.32),0 0 25px rgba(140,227,107,.1)}
+.shot img{transition:transform .5s,filter .5s}
+.shot:hover img{transform:scale(1.025);filter:saturate(1.08)}
+.download{position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.05)}
+.download:after{content:"";position:absolute;width:220px;height:220px;right:-75px;top:-100px;border:1px solid rgba(170,239,135,.18);border-radius:35%;box-shadow:0 0 0 18px rgba(170,239,135,.035),0 0 0 38px rgba(170,239,135,.025);transform:rotate(28deg);pointer-events:none}
+.download>*{position:relative;z-index:1}
+.tag{border:1px solid rgba(140,227,107,.2);box-shadow:0 0 14px rgba(140,227,107,.06)}
+.update{transition:padding-left .25s,border-color .25s}
+.update:hover{padding-left:10px;border-color:rgba(140,227,107,.55)}
+.faq{transition:padding .25s}
+.faq[open]{padding-left:12px;border-left:2px solid var(--green)}
+.faq summary:hover{color:var(--green)}
+footer{margin-top:30px}
+@keyframes sceneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 25px #a7e86a44}50%{box-shadow:0 0 48px #a7e86a88}}
+@keyframes worldShine{0%,55%{transform:translateX(-70%)}85%,100%{transform:translateX(70%)}}
+html.js .reveal{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease}
+html.js .reveal.is-visible{opacity:1;transform:translateY(0)}
+@media(max-width:700px){header{margin:0 -16px;padding:12px 16px}.hero{min-height:0}.section{padding-top:34px}.cards{gap:12px}.card:hover,.shot:hover{transform:translateY(-3px)}nav a{font-size:13px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}html.js .reveal{opacity:1;transform:none}}
+
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"PixelSurvival","description":"Пиксельная survival-игра: сбор ресурсов, инвентарь, крафт, строительство и сохранения.","genre":["Survival","Sandbox"],"gamePlatform":"PC","operatingSystem":"Windows","inLanguage":"ru","url":"https://demin6632-del.github.io/chronicles-of-the-abyss-site/"}</script>
 </head>
@@ -35,4 +95,15 @@
 </main>
 <footer><span>© 2026 PixelSurvival · Независимый игровой проект</span><span>Сайт обновляется вместе с разработкой</span></footer>
 </div>
+<script>
+document.documentElement.classList.add('js');
+const revealItems=document.querySelectorAll('.hero>div,.section,.download,.updates,.card,.shot,.faq');
+revealItems.forEach((el,i)=>{el.classList.add('reveal');el.style.transitionDelay=(i%3)*70+'ms'});
+if('IntersectionObserver' in window){
+ const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+  if(entry.isIntersecting){entry.target.classList.add('is-visible');revealObserver.unobserve(entry.target)}
+ }),{threshold:.12});
+ revealItems.forEach(el=>revealObserver.observe(el));
+}else{revealItems.forEach(el=>el.classList.add('is-visible'))}
+</script>
 </body></html>
