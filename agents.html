@@ -7,7 +7,7 @@
 <title>Исследовательская лаборатория — PixelSurvival</title>
 <style>
 :root{color-scheme:dark;--bg:#0b100d;--panel:#141d17;--line:#2d4935;--green:#8ce36b;--muted:#b4c4b6}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#1b3522 0,#0b100d 60%);color:#f0f7f0;font:16px/1.55 system-ui,sans-serif}.wrap{width:min(100% - 28px,900px);margin:auto}header{padding:22px 0;border-bottom:1px solid var(--line)}a{color:var(--green)}.brand{font-weight:900;letter-spacing:.04em}.brand span{color:var(--green)}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:34px 0 12px}.muted{color:var(--muted)}.panel{background:#141d17e8;border:1px solid var(--line);border-radius:18px;padding:20px;margin:18px 0}.search{display:flex;gap:10px;flex-wrap:wrap}input,textarea{font:inherit;color:#f0f7f0;background:#0d150f;border:1px solid #45634a;border-radius:11px;padding:13px;width:100%}input{flex:1;min-width:190px}button{font:inherit;font-weight:800;border:0;border-radius:11px;padding:12px 18px;background:var(--green);color:#102013;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.small{font-size:13px}.status{padding:10px 12px;border-radius:10px;background:#203c25;color:#c9f8b6;margin-top:12px}.result{padding:14px 0;border-bottom:1px solid var(--line)}.result:last-child{border:0}.result h3{font-size:17px;margin:0 0 5px}.result p{margin:5px 0;color:var(--muted)}.result button,.secondary{background:transparent;border:1px solid #55765a;color:#d9eadb;padding:7px 11px;font-size:13px}.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.role{padding:13px;border:1px solid var(--line);border-radius:12px;background:#101912}.role p{margin:6px 0 10px;color:var(--muted);font-size:13px}.role button{width:100%}.saved{display:grid;gap:10px}.saved-item{padding:12px;border:1px solid var(--line);border-radius:12px}.saved-item p{margin:6px 0;color:var(--muted)}.saved-item button{margin-top:8px}.warning{border-left:3px solid #d5b45b;padding:10px 13px;background:#282416;color:#e9dba9;border-radius:8px}.footer{padding:28px 0;color:#91a293;font-size:13px}@media(max-width:560px){.panel{padding:15px}.search button{width:100%}.roles{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#1b3522 0,#0b100d 60%);color:#f0f7f0;font:16px/1.55 system-ui,sans-serif}.wrap{width:min(100% - 28px,900px);margin:auto}header{padding:22px 0;border-bottom:1px solid var(--line)}a{color:var(--green)}.brand{font-weight:900;letter-spacing:.04em}.brand span{color:var(--green)}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:34px 0 12px}.muted{color:var(--muted)}.panel{background:#141d17e8;border:1px solid var(--line);border-radius:18px;padding:20px;margin:18px 0}.search{display:flex;gap:10px;flex-wrap:wrap}input,textarea{font:inherit;color:#f0f7f0;background:#0d150f;border:1px solid #45634a;border-radius:11px;padding:13px;width:100%}input{flex:1;min-width:190px}button{font:inherit;font-weight:800;border:0;border-radius:11px;padding:12px 18px;background:var(--green);color:#102013;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.small{font-size:13px}.status{padding:10px 12px;border-radius:10px;background:#203c25;color:#c9f8b6;margin-top:12px}.result{padding:14px 0;border-bottom:1px solid var(--line)}.result:last-child{border:0}.result h3{font-size:17px;margin:0 0 5px}.result p{margin:5px 0;color:var(--muted)}.result button,.secondary{background:transparent;border:1px solid #55765a;color:#d9eadb;padding:7px 11px;font-size:13px}.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.role{padding:13px;border:1px solid var(--line);border-radius:12px;background:#101912}.role p{margin:6px 0 10px;color:var(--muted);font-size:13px}.role button{width:100%}.saved{display:grid;gap:10px}.saved-item{padding:12px;border:1px solid var(--line);border-radius:12px}.saved-item p{margin:6px 0;color:var(--muted)}.saved-item button{margin:8px 8px 0 0}.saved-editor{display:grid;gap:9px}.saved-editor input,.saved-editor textarea,.saved-editor select{width:100%}.warning{border-left:3px solid #d5b45b;padding:10px 13px;background:#282416;color:#e9dba9;border-radius:8px}.footer{padding:28px 0;color:#91a293;font-size:13px}@media(max-width:560px){.panel{padding:15px}.search button{width:100%}.roles{grid-template-columns:1fr}}
 </style>
 </head>
 <body><div class="wrap">
@@ -125,9 +125,39 @@
       const body = document.createElement("p"); body.textContent = item.body;
       article.append(title, categoryLabel, body);
       if (item.url) { const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть источник"; article.append(link); }
+      const edit = document.createElement("button"); edit.className = "secondary"; edit.textContent = "Редактировать";
+      edit.addEventListener("click", () => {
+        const titleInput = document.createElement("input");
+        titleInput.value = item.title; titleInput.maxLength = 100; titleInput.setAttribute("aria-label", "Название заметки");
+        const categoryInput = document.createElement("select");
+        categoryInput.setAttribute("aria-label", "Категория заметки");
+        for (const name of ["Без категории","Программирование","Геймдизайн","Тестирование","Архитектура","Интерфейс и графика","Источники"]) {
+          const option = document.createElement("option"); option.value = name; option.textContent = name; categoryInput.append(option);
+        }
+        categoryInput.value = item.category || "Без категории";
+        const bodyInput = document.createElement("textarea");
+        bodyInput.rows = 4; bodyInput.maxLength = 3000; bodyInput.value = item.body || "";
+        bodyInput.setAttribute("aria-label", "Текст заметки");
+        const saveEdit = document.createElement("button"); saveEdit.textContent = "Сохранить изменения";
+        const cancelEdit = document.createElement("button"); cancelEdit.className = "secondary"; cancelEdit.textContent = "Отмена";
+        const error = document.createElement("p"); error.className = "small"; error.setAttribute("role", "alert");
+        const editor = document.createElement("div"); editor.className = "saved-editor";
+        editor.append(titleInput, categoryInput, bodyInput, saveEdit, cancelEdit, error);
+        article.replaceChildren(editor);
+        saveEdit.addEventListener("click", () => {
+          const nextTitle = titleInput.value.trim(), nextBody = bodyInput.value.trim();
+          if (!nextTitle || !nextBody) { error.textContent = "Заполни название и текст заметки."; return; }
+          const current = load();
+          const index = current.findIndex(x => x.id === item.id);
+          if (index < 0) { error.textContent = "Запись уже не найдена. Обнови список."; return; }
+          current[index] = {...current[index], title: nextTitle, body: nextBody, category: categoryInput.value, updatedAt: new Date().toISOString()};
+          save(current); renderSaved();
+        });
+        cancelEdit.addEventListener("click", renderSaved);
+      });
       const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "Удалить";
       remove.addEventListener("click", () => { save(load().filter(x => x.id !== item.id)); renderSaved(); });
-      article.append(remove); $("saved").append(article);
+      article.append(edit, remove); $("saved").append(article);
     }
   }
   $("exportNotes").addEventListener("click", () => {
