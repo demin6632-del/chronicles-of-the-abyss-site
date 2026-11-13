@@ -30,6 +30,7 @@
 <form id="noteForm">
 <input id="noteTitle" placeholder="Название заметки" maxlength="100" required>
 <select id="noteCategory" aria-label="Категория заметки" style="margin-top:10px"><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select>
+<select id="noteFolder" aria-label="Папка заметки" style="margin-top:10px"><option>Без папки</option></select>
 <textarea id="noteBody" rows="3" placeholder="Что важно запомнить?" maxlength="3000" required style="margin-top:10px"></textarea>
 <button type="submit" style="margin-top:10px">Сохранить заметку</button>
 </form>
@@ -42,6 +43,12 @@
 <label class="small muted" for="noteFilter" style="display:block;margin-top:16px">Поиск по сохранённым записям</label>
 <input id="noteFilter" type="search" placeholder="Введи слово из названия или заметки" style="margin-top:6px">
 <div class="search" style="margin-top:8px"><select id="categoryFilter" aria-label="Фильтр по категории"><option value="">Все категории</option><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select><select id="sortNotes" aria-label="Сортировка записей"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="title">По названию А—Я</option></select></div>
+<div class="search" style="margin-top:10px">
+<select id="folderFilter" aria-label="Фильтр по папке"><option value="">Все папки</option><option>Без папки</option></select>
+<input id="newFolderName" maxlength="40" placeholder="Название новой папки" aria-label="Название новой папки">
+<button type="button" id="createFolder" class="secondary">Создать папку</button>
+</div>
+<p id="folderStatus" class="muted small" aria-live="polite">Папки помогают группировать заметки и источники.</p>
 <p id="savedCount" class="muted small" aria-live="polite"></p>
 <div id="saved" class="saved"></div>
 </section>
@@ -76,6 +83,31 @@
   const API_BASE = "https://pixelsurvival-research.onrender.com";
   const $ = (id) => document.getElementById(id);
   const storageKey = "pixelsurvival_research_notes_v1";
+  const folderStorageKey = "pixelsurvival_research_folders_v1";
+  const defaultFolder = "Без папки";
+  const loadFolders = () => {
+    try {
+      const values = JSON.parse(localStorage.getItem(folderStorageKey) || "[]");
+      return [...new Set(values.filter(x => typeof x === "string").map(x => x.trim()).filter(x => x && x !== defaultFolder && x.length <= 40))].slice(0,50);
+    } catch { return []; }
+  };
+  const saveFolders = (items) => localStorage.setItem(folderStorageKey, JSON.stringify([...new Set(items)].slice(0,50)));
+  function renderFolderControls() {
+    const folders = loadFolders();
+    for (const id of ["folderFilter", "noteFolder"]) {
+      const select = $(id); if (!select) continue;
+      const selected = select.value;
+      select.replaceChildren();
+      const first = document.createElement("option");
+      first.value = id === "folderFilter" ? "" : defaultFolder;
+      first.textContent = id === "folderFilter" ? "Все папки" : defaultFolder;
+      select.append(first);
+      for (const folder of folders) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; select.append(option);
+      }
+      if ([...select.options].some(option => option.value === selected)) select.value = selected;
+    }
+  }
   const load = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
   const save = (items) => localStorage.setItem(storageKey, JSON.stringify(items.slice(0,100)));
   function safeImportedItems(value) {
@@ -97,17 +129,20 @@
         } catch {}
       }
       if (!title || (!body && !url)) return null;
-      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, category, ...(createdAt ? {createdAt} : {}), ...(url ? {url} : {})};
+      const folder = typeof item.folder === "string" && item.folder.trim().length <= 40 ? item.folder.trim() : defaultFolder;
+      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, category, folder, ...(createdAt ? {createdAt} : {}), ...(url ? {url} : {})};
     }).filter(Boolean);
   }
   function renderSaved() {
     const allItems = load();
     const query = $("noteFilter").value.trim().toLocaleLowerCase("ru");
     const category = $("categoryFilter").value;
+    const folder = $("folderFilter").value;
     const sort = $("sortNotes").value;
     const items = allItems.filter(item =>
       (item.title + " " + item.body + " " + (item.url || "")).toLocaleLowerCase("ru").includes(query) &&
-      (!category || (item.category || "Без категории") === category)
+      (!category || (item.category || "Без категории") === category) &&
+      (!folder || (item.folder || defaultFolder) === folder)
     );
     items.sort((a,b) => sort === "title"
       ? a.title.localeCompare(b.title, "ru")
@@ -121,7 +156,7 @@
     for (const item of items) {
       const article = document.createElement("article"); article.className = "saved-item";
       const title = document.createElement("strong"); title.textContent = item.title;
-      const categoryLabel = document.createElement("p"); categoryLabel.className = "small muted"; categoryLabel.textContent = "Категория: " + (item.category || "Без категории");
+      const categoryLabel = document.createElement("p"); categoryLabel.className = "small muted"; categoryLabel.textContent = "Категория: " + (item.category || "Без категории") + " · Папка: " + (item.folder || defaultFolder);
       const body = document.createElement("p"); body.textContent = item.body;
       article.append(title, categoryLabel, body);
       if (item.url) { const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть источник"; article.append(link); }
@@ -135,6 +170,12 @@
           const option = document.createElement("option"); option.value = name; option.textContent = name; categoryInput.append(option);
         }
         categoryInput.value = item.category || "Без категории";
+        const folderInput = document.createElement("select");
+        folderInput.setAttribute("aria-label", "Папка заметки");
+        for (const name of [defaultFolder, ...loadFolders()]) {
+          const option = document.createElement("option"); option.value = name; option.textContent = name; folderInput.append(option);
+        }
+        folderInput.value = item.folder || defaultFolder;
         const bodyInput = document.createElement("textarea");
         bodyInput.rows = 4; bodyInput.maxLength = 3000; bodyInput.value = item.body || "";
         bodyInput.setAttribute("aria-label", "Текст заметки");
@@ -142,7 +183,7 @@
         const cancelEdit = document.createElement("button"); cancelEdit.className = "secondary"; cancelEdit.textContent = "Отмена";
         const error = document.createElement("p"); error.className = "small"; error.setAttribute("role", "alert");
         const editor = document.createElement("div"); editor.className = "saved-editor";
-        editor.append(titleInput, categoryInput, bodyInput, saveEdit, cancelEdit, error);
+        editor.append(titleInput, categoryInput, folderInput, bodyInput, saveEdit, cancelEdit, error);
         article.replaceChildren(editor);
         saveEdit.addEventListener("click", () => {
           const nextTitle = titleInput.value.trim(), nextBody = bodyInput.value.trim();
@@ -150,7 +191,7 @@
           const current = load();
           const index = current.findIndex(x => x.id === item.id);
           if (index < 0) { error.textContent = "Запись уже не найдена. Обнови список."; return; }
-          current[index] = {...current[index], title: nextTitle, body: nextBody, category: categoryInput.value, updatedAt: new Date().toISOString()};
+          current[index] = {...current[index], title: nextTitle, body: nextBody, category: categoryInput.value, folder: folderInput.value, updatedAt: new Date().toISOString()};
           save(current); renderSaved();
         });
         cancelEdit.addEventListener("click", renderSaved);
@@ -161,7 +202,7 @@
     }
   }
   $("exportNotes").addEventListener("click", () => {
-    const payload = {format:"pixelsurvival-research-notes",version:1,exportedAt:new Date().toISOString(),items:load()};
+    const payload = {format:"pixelsurvival-research-notes",version:1,exportedAt:new Date().toISOString(),folders:loadFolders(),items:load()};
     const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a"); link.href = url; link.download = "pixelsurvival-knowledge-backup.json";
@@ -175,10 +216,12 @@
       const parsed = JSON.parse(await file.text());
       if (parsed?.format !== "pixelsurvival-research-notes" || parsed?.version !== 1) throw new Error("Неизвестный формат резервной копии.");
       const imported = safeImportedItems(parsed.items);
+      const importedFolders = Array.isArray(parsed.folders) ? parsed.folders.filter(x => typeof x === "string").map(x => x.trim()).filter(x => x && x !== defaultFolder && x.length <= 40).slice(0,50) : [];
+      saveFolders([...loadFolders(), ...importedFolders]);
       const current = load(), seen = new Set(current.map(item => item.id));
       const merged = [...current];
       for (const item of imported) if (!seen.has(item.id)) { merged.push(item); seen.add(item.id); }
-      save(merged); renderSaved();
+      save(merged); renderFolderControls(); renderSaved();
       $("backupStatus").textContent = "Импортировано записей: " + (merged.length - current.length) + ". Всего в браузере: " + Math.min(merged.length,100) + ".";
     } catch (error) { $("backupStatus").textContent = error.message || "Не удалось импортировать файл."; }
     finally { event.target.value = ""; }
@@ -194,7 +237,7 @@
     event.preventDefault();
     const title = $("noteTitle").value.trim(), body = $("noteBody").value.trim();
     if (!title || !body) return;
-    const items = load(); items.unshift({id: crypto.randomUUID(), title, body, category: $("noteCategory").value, createdAt: new Date().toISOString()});
+    const items = load(); items.unshift({id: crypto.randomUUID(), title, body, category: $("noteCategory").value, folder: $("noteFolder").value || defaultFolder, createdAt: new Date().toISOString()});
     save(items); $("noteForm").reset(); renderSaved();
   });
   $("searchForm").addEventListener("submit", async (event) => {
@@ -213,16 +256,31 @@
         const snippet = document.createElement("p"); snippet.textContent = result.snippet;
         const link = document.createElement("a"); link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
         const button = document.createElement("button"); button.textContent = "Сохранить источник";
-        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url,category:"Источники",createdAt:new Date().toISOString()}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
+        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url,category:"Источники",folder:defaultFolder,createdAt:new Date().toISOString()}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
         article.append(heading,snippet,link,document.createTextNode(" "),button); $("results").append(article);
       }
       if (!data.results.length) $("results").textContent = "Ничего не найдено среди разрешённых источников.";
     } catch (error) { $("status").textContent = error.message || "Не удалось выполнить поиск."; }
     finally { $("searchButton").disabled = false; }
   });
+  $("createFolder").addEventListener("click", () => {
+    const input = $("newFolderName");
+    const name = input.value.trim();
+    if (!name) { $("folderStatus").textContent = "Введи название папки."; return; }
+    if (name.length > 40) { $("folderStatus").textContent = "Название папки должно быть не длиннее 40 символов."; return; }
+    if (name === defaultFolder || loadFolders().includes(name)) { $("folderStatus").textContent = "Такая папка уже существует или зарезервирована."; return; }
+    const folders = loadFolders();
+    if (folders.length >= 50) { $("folderStatus").textContent = "Достигнут лимит в 50 папок."; return; }
+    folders.push(name); saveFolders(folders); input.value = "";
+    renderFolderControls(); $("folderFilter").value = name;
+    $("folderStatus").textContent = "Папка создана: " + name;
+    renderSaved();
+  });
+  $("folderFilter").addEventListener("change", renderSaved);
   $("noteFilter").addEventListener("input", renderSaved);
   $("categoryFilter").addEventListener("change", renderSaved);
   $("sortNotes").addEventListener("change", renderSaved);
+  renderFolderControls();
   renderSaved();
 })();
 </script>
