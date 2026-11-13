@@ -1,0 +1,8 @@
+{
+  "name": "pixelsurvival-research",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Безключевой поиск по официальным техническим источникам PixelSurvival",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" }
+}
