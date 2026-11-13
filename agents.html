@@ -29,6 +29,7 @@
 <p class="muted small">Сохранённые ссылки и твои заметки хранятся только в этом браузере на этом устройстве. Это пока не общая облачная память агентов.</p>
 <form id="noteForm">
 <input id="noteTitle" placeholder="Название заметки" maxlength="100" required>
+<select id="noteCategory" aria-label="Категория заметки" style="margin-top:10px"><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select>
 <textarea id="noteBody" rows="3" placeholder="Что важно запомнить?" maxlength="3000" required style="margin-top:10px"></textarea>
 <button type="submit" style="margin-top:10px">Сохранить заметку</button>
 </form>
@@ -40,6 +41,7 @@
 <p id="backupStatus" class="muted small" aria-live="polite">Можно переносить заметки между устройствами через JSON-файл. Файл хранится у тебя.</p>
 <label class="small muted" for="noteFilter" style="display:block;margin-top:16px">Поиск по сохранённым записям</label>
 <input id="noteFilter" type="search" placeholder="Введи слово из названия или заметки" style="margin-top:6px">
+<div class="search" style="margin-top:8px"><select id="categoryFilter" aria-label="Фильтр по категории"><option value="">Все категории</option><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select><select id="sortNotes" aria-label="Сортировка записей"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="title">По названию А—Я</option></select></div>
 <p id="savedCount" class="muted small" aria-live="polite"></p>
 <div id="saved" class="saved"></div>
 </section>
@@ -84,6 +86,9 @@
       if (!item || typeof item !== "object") return null;
       const title = String(item.title || "").trim().slice(0,100);
       const body = String(item.body || "").trim().slice(0,3000);
+      const categories = ["Без категории","Программирование","Геймдизайн","Тестирование","Архитектура","Интерфейс и графика","Источники"];
+      const category = categories.includes(item.category) ? item.category : "Без категории";
+      const createdAt = typeof item.createdAt === "string" && Number.isFinite(Date.parse(item.createdAt)) ? new Date(item.createdAt).toISOString() : "";
       let url = "";
       if (item.url) {
         try {
@@ -92,13 +97,23 @@
         } catch {}
       }
       if (!title || (!body && !url)) return null;
-      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, ...(url ? {url} : {})};
+      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, category, ...(createdAt ? {createdAt} : {}), ...(url ? {url} : {})};
     }).filter(Boolean);
   }
   function renderSaved() {
     const allItems = load();
     const query = $("noteFilter").value.trim().toLocaleLowerCase("ru");
-    const items = allItems.filter(item => (item.title + " " + item.body + " " + (item.url || "")).toLocaleLowerCase("ru").includes(query));
+    const category = $("categoryFilter").value;
+    const sort = $("sortNotes").value;
+    const items = allItems.filter(item =>
+      (item.title + " " + item.body + " " + (item.url || "")).toLocaleLowerCase("ru").includes(query) &&
+      (!category || (item.category || "Без категории") === category)
+    );
+    items.sort((a,b) => sort === "title"
+      ? a.title.localeCompare(b.title, "ru")
+      : sort === "oldest"
+        ? (Date.parse(a.createdAt || 0) || 0) - (Date.parse(b.createdAt || 0) || 0)
+        : (Date.parse(b.createdAt || 0) || 0) - (Date.parse(a.createdAt || 0) || 0));
     $("savedCount").textContent = query ? `Показано ${items.length} из ${allItems.length}` : `Сохранено записей: ${allItems.length} из 100`;
     $("saved").replaceChildren();
     if (!allItems.length) { $("saved").textContent = "Пока ничего не сохранено."; return; }
@@ -106,8 +121,9 @@
     for (const item of items) {
       const article = document.createElement("article"); article.className = "saved-item";
       const title = document.createElement("strong"); title.textContent = item.title;
+      const categoryLabel = document.createElement("p"); categoryLabel.className = "small muted"; categoryLabel.textContent = "Категория: " + (item.category || "Без категории");
       const body = document.createElement("p"); body.textContent = item.body;
-      article.append(title, body);
+      article.append(title, categoryLabel, body);
       if (item.url) { const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть источник"; article.append(link); }
       const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "Удалить";
       remove.addEventListener("click", () => { save(load().filter(x => x.id !== item.id)); renderSaved(); });
@@ -148,7 +164,7 @@
     event.preventDefault();
     const title = $("noteTitle").value.trim(), body = $("noteBody").value.trim();
     if (!title || !body) return;
-    const items = load(); items.unshift({id: crypto.randomUUID(), title, body});
+    const items = load(); items.unshift({id: crypto.randomUUID(), title, body, category: $("noteCategory").value, createdAt: new Date().toISOString()});
     save(items); $("noteForm").reset(); renderSaved();
   });
   $("searchForm").addEventListener("submit", async (event) => {
@@ -167,7 +183,7 @@
         const snippet = document.createElement("p"); snippet.textContent = result.snippet;
         const link = document.createElement("a"); link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
         const button = document.createElement("button"); button.textContent = "Сохранить источник";
-        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
+        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url,category:"Источники",createdAt:new Date().toISOString()}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
         article.append(heading,snippet,link,document.createTextNode(" "),button); $("results").append(article);
       }
       if (!data.results.length) $("results").textContent = "Ничего не найдено среди разрешённых источников.";
@@ -175,6 +191,8 @@
     finally { $("searchButton").disabled = false; }
   });
   $("noteFilter").addEventListener("input", renderSaved);
+  $("categoryFilter").addEventListener("change", renderSaved);
+  $("sortNotes").addEventListener("change", renderSaved);
   renderSaved();
 })();
 </script>
