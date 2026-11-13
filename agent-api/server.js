@@ -7,8 +7,7 @@ const ALLOWED_HOSTS = new Set([
   "docs.godotengine.org",
   "godotengine.org",
   "docs.github.com",
-  "developer.mozilla.org",
-  "github.com"
+  "developer.mozilla.org"
 ]);
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 20;
