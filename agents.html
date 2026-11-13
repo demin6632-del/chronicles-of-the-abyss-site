@@ -32,6 +32,12 @@
 <textarea id="noteBody" rows="3" placeholder="Что важно запомнить?" maxlength="3000" required style="margin-top:10px"></textarea>
 <button type="submit" style="margin-top:10px">Сохранить заметку</button>
 </form>
+<div class="search" style="margin:12px 0">
+<button type="button" id="exportNotes" class="secondary">Экспортировать базу</button>
+<label class="secondary" for="importNotes" style="display:inline-flex;align-items:center;cursor:pointer;padding:12px 18px;border:1px solid #55765a;border-radius:11px">Импортировать базу</label>
+<input id="importNotes" type="file" accept="application/json,.json" hidden>
+</div>
+<p id="backupStatus" class="muted small" aria-live="polite">Можно переносить заметки между устройствами через JSON-файл. Файл хранится у тебя.</p>
 <div id="saved" class="saved" style="margin-top:16px"></div>
 </section>
 <section class="panel">
@@ -67,6 +73,25 @@
   const storageKey = "pixelsurvival_research_notes_v1";
   const load = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
   const save = (items) => localStorage.setItem(storageKey, JSON.stringify(items.slice(0,100)));
+  function safeImportedItems(value) {
+    if (!Array.isArray(value)) throw new Error("В файле ожидался список заметок.");
+    if (value.length > 500) throw new Error("В файле слишком много записей (максимум 500).");
+    const allowedHosts = new Set(["docs.godotengine.org","godotengine.org","docs.github.com","developer.mozilla.org"]);
+    return value.slice(0,100).map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const title = String(item.title || "").trim().slice(0,100);
+      const body = String(item.body || "").trim().slice(0,3000);
+      let url = "";
+      if (item.url) {
+        try {
+          const parsed = new URL(String(item.url));
+          if (parsed.protocol === "https:" && !parsed.username && !parsed.password && allowedHosts.has(parsed.hostname)) url = parsed.href;
+        } catch {}
+      }
+      if (!title || (!body && !url)) return null;
+      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, ...(url ? {url} : {})};
+    }).filter(Boolean);
+  }
   function renderSaved() {
     const items = load();
     $("saved").innerHTML = "";
@@ -82,6 +107,29 @@
       article.append(remove); $("saved").append(article);
     }
   }
+  $("exportNotes").addEventListener("click", () => {
+    const payload = {format:"pixelsurvival-research-notes",version:1,exportedAt:new Date().toISOString(),items:load()};
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a"); link.href = url; link.download = "pixelsurvival-knowledge-backup.json";
+    document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    $("backupStatus").textContent = "Резервная копия подготовлена. Сохрани JSON-файл в надёжном месте.";
+  });
+  $("importNotes").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0]; if (!file) return;
+    try {
+      if (file.size > 200000) throw new Error("Файл больше 200 КБ — импорт остановлен.");
+      const parsed = JSON.parse(await file.text());
+      if (parsed?.format !== "pixelsurvival-research-notes" || parsed?.version !== 1) throw new Error("Неизвестный формат резервной копии.");
+      const imported = safeImportedItems(parsed.items);
+      const current = load(), seen = new Set(current.map(item => item.id));
+      const merged = [...current];
+      for (const item of imported) if (!seen.has(item.id)) { merged.push(item); seen.add(item.id); }
+      save(merged); renderSaved();
+      $("backupStatus").textContent = "Импортировано записей: " + (merged.length - current.length) + ". Всего в браузере: " + Math.min(merged.length,100) + ".";
+    } catch (error) { $("backupStatus").textContent = error.message || "Не удалось импортировать файл."; }
+    finally { event.target.value = ""; }
+  });
   document.querySelectorAll(".role-search").forEach((button) => {
     button.addEventListener("click", () => {
       $("query").value = button.dataset.query || "";
