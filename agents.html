@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b13">
+<title>Исследовательская лаборатория — PixelSurvival</title>
+<style>
+:root{color-scheme:dark;--bg:#0b100d;--panel:#141d17;--line:#2d4935;--green:#8ce36b;--muted:#b4c4b6}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#1b3522 0,#0b100d 60%);color:#f0f7f0;font:16px/1.55 system-ui,sans-serif}.wrap{width:min(100% - 28px,900px);margin:auto}header{padding:22px 0;border-bottom:1px solid var(--line)}a{color:var(--green)}.brand{font-weight:900;letter-spacing:.04em}.brand span{color:var(--green)}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:34px 0 12px}.muted{color:var(--muted)}.panel{background:#141d17e8;border:1px solid var(--line);border-radius:18px;padding:20px;margin:18px 0}.search{display:flex;gap:10px;flex-wrap:wrap}input,textarea{font:inherit;color:#f0f7f0;background:#0d150f;border:1px solid #45634a;border-radius:11px;padding:13px;width:100%}input{flex:1;min-width:190px}button{font:inherit;font-weight:800;border:0;border-radius:11px;padding:12px 18px;background:var(--green);color:#102013;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.small{font-size:13px}.status{padding:10px 12px;border-radius:10px;background:#203c25;color:#c9f8b6;margin-top:12px}.result{padding:14px 0;border-bottom:1px solid var(--line)}.result:last-child{border:0}.result h3{font-size:17px;margin:0 0 5px}.result p{margin:5px 0;color:var(--muted)}.result button,.secondary{background:transparent;border:1px solid #55765a;color:#d9eadb;padding:7px 11px;font-size:13px}.saved{display:grid;gap:10px}.saved-item{padding:12px;border:1px solid var(--line);border-radius:12px}.saved-item p{margin:6px 0;color:var(--muted)}.saved-item button{margin-top:8px}.warning{border-left:3px solid #d5b45b;padding:10px 13px;background:#282416;color:#e9dba9;border-radius:8px}.footer{padding:28px 0;color:#91a293;font-size:13px}@media(max-width:560px){.panel{padding:15px}.search button{width:100%}}
+</style>
+</head>
+<body><div class="wrap">
+<header><a class="brand" href="./">PIXEL<span>SURVIVAL</span></a> · Исследовательская лаборатория</header>
+<main>
+<h1>Интернет-исследования</h1>
+<p class="muted">Первый этап будущей команды помощников: поиск документации и сохранение полезных источников по разработке PixelSurvival.</p>
+<section class="panel">
+<h2>Найти информацию</h2>
+<form id="searchForm" class="search">
+<input id="query" minlength="3" maxlength="160" placeholder="Например: Godot 4 CharacterBody2D движение" required>
+<button id="searchButton" type="submit" disabled>Поиск</button>
+</form>
+<div id="status" class="status">Сервер поиска ещё не подключён. Панель подготовлена; после публикации backend на Render сюда будет добавлен его адрес.</div>
+<div id="results" aria-live="polite"></div>
+</section>
+<section class="panel">
+<h2>Моя база знаний</h2>
+<p class="muted small">Сохранённые ссылки и твои заметки хранятся только в этом браузере на этом устройстве. Это пока не общая облачная память агентов.</p>
+<form id="noteForm">
+<input id="noteTitle" placeholder="Название заметки" maxlength="100" required>
+<textarea id="noteBody" rows="3" placeholder="Что важно запомнить?" maxlength="3000" required style="margin-top:10px"></textarea>
+<button type="submit" style="margin-top:10px">Сохранить заметку</button>
+</form>
+<div id="saved" class="saved" style="margin-top:16px"></div>
+</section>
+<section class="panel">
+<h2>Что умеет эта версия</h2>
+<ul>
+<li>Подготовлена отдельная страница, не меняющая главную страницу игры.</li>
+<li>Поиск будет ограничен официальными техническими источниками.</li>
+<li>Можно сохранять найденные ссылки и собственные заметки.</li>
+<li>Никакие файлы игры или GitHub автоматически не изменяются.</li>
+</ul>
+<div class="warning small">Важно: это исследовательский инструмент, а не полноценная языковая модель. Он не должен придумывать ответы вместо проверки источников.</div>
+</section>
+</main>
+<footer class="footer">PixelSurvival · Экспериментальная функция · Версия лаборатории 0.1</footer>
+</div>
+<script>
+(() => {
+  // После создания Render-сервиса сюда будет вписан только публичный URL backend.
+  const API_BASE = "";
+  const $ = (id) => document.getElementById(id);
+  const storageKey = "pixelsurvival_research_notes_v1";
+  const load = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
+  const save = (items) => localStorage.setItem(storageKey, JSON.stringify(items.slice(0,100)));
+  function renderSaved() {
+    const items = load();
+    $("saved").innerHTML = "";
+    if (!items.length) { $("saved").textContent = "Пока ничего не сохранено."; return; }
+    for (const item of items) {
+      const article = document.createElement("article"); article.className = "saved-item";
+      const title = document.createElement("strong"); title.textContent = item.title;
+      const body = document.createElement("p"); body.textContent = item.body;
+      article.append(title, body);
+      if (item.url) { const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть источник"; article.append(link); }
+      const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "Удалить";
+      remove.addEventListener("click", () => { save(load().filter(x => x.id !== item.id)); renderSaved(); });
+      article.append(remove); $("saved").append(article);
+    }
+  }
+  $("noteForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const title = $("noteTitle").value.trim(), body = $("noteBody").value.trim();
+    if (!title || !body) return;
+    const items = load(); items.unshift({id: crypto.randomUUID(), title, body});
+    save(items); $("noteForm").reset(); renderSaved();
+  });
+  $("searchForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const q = $("query").value.trim();
+    if (!API_BASE) { $("status").textContent = "Поиск станет доступен после развёртывания backend на Render."; return; }
+    $("searchButton").disabled = true; $("status").textContent = "Ищем официальную документацию…"; $("results").replaceChildren();
+    try {
+      const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Ошибка поиска");
+      $("status").textContent = data.note || "Готово.";
+      for (const result of data.results) {
+        const article = document.createElement("article"); article.className = "result";
+        const heading = document.createElement("h3"); heading.textContent = result.title;
+        const snippet = document.createElement("p"); snippet.textContent = result.snippet;
+        const link = document.createElement("a"); link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
+        const button = document.createElement("button"); button.textContent = "Сохранить источник";
+        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
+        article.append(heading,snippet,link,document.createTextNode(" "),button); $("results").append(article);
+      }
+      if (!data.results.length) $("results").textContent = "Ничего не найдено среди разрешённых источников.";
+    } catch (error) { $("status").textContent = error.message || "Не удалось выполнить поиск."; }
+    finally { $("searchButton").disabled = false; }
+  });
+  renderSaved();
+})();
+</script>
+</body></html>
