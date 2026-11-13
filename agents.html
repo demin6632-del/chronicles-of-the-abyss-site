@@ -19,9 +19,9 @@
 <h2>Найти информацию</h2>
 <form id="searchForm" class="search">
 <input id="query" minlength="3" maxlength="160" placeholder="Например: Godot 4 CharacterBody2D движение" required>
-<button id="searchButton" type="submit" disabled>Поиск</button>
+<button id="searchButton" type="submit">Поиск</button>
 </form>
-<div id="status" class="status">Сервер поиска ещё не подключён. Панель подготовлена; после публикации backend на Render сюда будет добавлен его адрес.</div>
+<div id="status" class="status">Поиск подключён к отдельному серверу PixelSurvival Research. Источники ограничены официальной технической документацией.</div>
 <div id="results" aria-live="polite"></div>
 </section>
 <section class="panel">
@@ -49,8 +49,8 @@
 </div>
 <script>
 (() => {
-  // После создания Render-сервиса сюда будет вписан только публичный URL backend.
-  const API_BASE = "";
+  // Публичный адрес backend; секреты в браузере не хранятся.
+  const API_BASE = "https://pixelsurvival-research.onrender.com";
   const $ = (id) => document.getElementById(id);
   const storageKey = "pixelsurvival_research_notes_v1";
   const load = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
@@ -80,7 +80,7 @@
   $("searchForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const q = $("query").value.trim();
-    if (!API_BASE) { $("status").textContent = "Поиск станет доступен после развёртывания backend на Render."; return; }
+    if (!API_BASE) { $("status").textContent = "Сервер поиска подключён."; return; }
     $("searchButton").disabled = true; $("status").textContent = "Ищем официальную документацию…"; $("results").replaceChildren();
     try {
       const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q));
