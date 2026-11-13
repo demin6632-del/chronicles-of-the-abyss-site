@@ -14,7 +14,7 @@
 <header><a class="brand" href="./">PIXEL<span>SURVIVAL</span></a> · Исследовательская лаборатория</header>
 <main>
 <h1>Интернет-исследования</h1>
-<p class="muted">Первый этап будущей команды помощников: поиск документации и сохранение полезных источников по разработке PixelSurvival.</p>
+<p class="muted">Личная исследовательская лаборатория: поиск документации и сохранение полезных источников для разработки PixelSurvival.</p>
 <section class="panel">
 <h2>Найти информацию</h2>
 <form id="searchForm" class="search">
@@ -38,11 +38,14 @@
 <input id="importNotes" type="file" accept="application/json,.json" hidden>
 </div>
 <p id="backupStatus" class="muted small" aria-live="polite">Можно переносить заметки между устройствами через JSON-файл. Файл хранится у тебя.</p>
-<div id="saved" class="saved" style="margin-top:16px"></div>
+<label class="small muted" for="noteFilter" style="display:block;margin-top:16px">Поиск по сохранённым записям</label>
+<input id="noteFilter" type="search" placeholder="Введи слово из названия или заметки" style="margin-top:6px">
+<p id="savedCount" class="muted small" aria-live="polite"></p>
+<div id="saved" class="saved"></div>
 </section>
 <section class="panel">
-<h2>Специализации будущей команды</h2>
-<p class="muted small">Пока это исследовательские направления, а не автономные ИИ-агенты. Нажми на специалиста — лаборатория подготовит поисковый запрос по его теме.</p>
+<h2>Направления исследований</h2>
+<p class="muted small">Это тематические режимы поиска, а не реальные люди и не автономные ИИ-агенты. Выбери направление — лаборатория подготовит запрос по его теме.</p>
 <div class="roles">
 <article class="role"><b>🧭 Координатор</b><p>Планирование задач и порядок разработки.</p><button type="button" class="secondary role-search" data-query="Godot project architecture game development workflow">Найти материалы</button></article>
 <article class="role"><b>💻 Программист</b><p>GDScript, сцены, сигналы и оптимизация.</p><button type="button" class="secondary role-search" data-query="Godot 4 GDScript CharacterBody2D signals">Найти материалы</button></article>
@@ -93,9 +96,13 @@
     }).filter(Boolean);
   }
   function renderSaved() {
-    const items = load();
-    $("saved").innerHTML = "";
-    if (!items.length) { $("saved").textContent = "Пока ничего не сохранено."; return; }
+    const allItems = load();
+    const query = $("noteFilter").value.trim().toLocaleLowerCase("ru");
+    const items = allItems.filter(item => (item.title + " " + item.body + " " + (item.url || "")).toLocaleLowerCase("ru").includes(query));
+    $("savedCount").textContent = query ? `Показано ${items.length} из ${allItems.length}` : `Сохранено записей: ${allItems.length} из 100`;
+    $("saved").replaceChildren();
+    if (!allItems.length) { $("saved").textContent = "Пока ничего не сохранено."; return; }
+    if (!items.length) { $("saved").textContent = "По этому запросу ничего не найдено."; return; }
     for (const item of items) {
       const article = document.createElement("article"); article.className = "saved-item";
       const title = document.createElement("strong"); title.textContent = item.title;
@@ -167,6 +174,7 @@
     } catch (error) { $("status").textContent = error.message || "Не удалось выполнить поиск."; }
     finally { $("searchButton").disabled = false; }
   });
+  $("noteFilter").addEventListener("input", renderSaved);
   renderSaved();
 })();
 </script>
