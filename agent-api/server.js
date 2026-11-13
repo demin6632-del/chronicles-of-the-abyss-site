@@ -23,6 +23,7 @@ function send(res, status, data) {
   });
   res.end(JSON.stringify(data));
 }
+
 function cleanText(value) {
   return String(value || "")
     .replace(/<[^>]*>/g, " ")
@@ -34,67 +35,150 @@ function cleanText(value) {
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/\s+/g, " ").trim().slice(0, 500);
 }
+
 function allowedUrl(raw) {
   try {
     const url = new URL(raw);
-    return url.protocol === "https:" && ALLOWED_HOSTS.has(url.hostname) ? url.href : null;
-  } catch { return null; }
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    return ALLOWED_HOSTS.has(url.hostname) ? url.href : null;
+  } catch {
+    return null;
+  }
 }
+
+function clientIp(req) {
+  // Reverse proxies append the connecting client address to X-Forwarded-For.
+  // Use the final entry so a caller cannot choose the rate-limit key by
+  // prepending a forged address.
+  const forwarded = String(req.headers["x-forwarded-for"] || "")
+    .split(",").map(value => value.trim()).filter(Boolean);
+  return forwarded.at(-1) || req.socket.remoteAddress || "unknown";
+}
+
 function rateLimited(ip) {
   const now = Date.now();
+  if (requests.size > 5000) {
+    for (const [key, entry] of requests) {
+      if (now - entry.start > WINDOW_MS) requests.delete(key);
+    }
+  }
   const entry = requests.get(ip) || { start: now, count: 0 };
-  if (now - entry.start > WINDOW_MS) { entry.start = now; entry.count = 0; }
+  if (now - entry.start > WINDOW_MS) {
+    entry.start = now;
+    entry.count = 0;
+  }
   entry.count++;
   requests.set(ip, entry);
   return entry.count > MAX_REQUESTS;
 }
+
 async function search(query) {
   const endpoint = new URL("https://html.duckduckgo.com/html/");
-  endpoint.searchParams.set("q", query + " (site:docs.godotengine.org OR site:docs.github.com OR site:developer.mozilla.org OR site:godotengine.org)");
+  endpoint.searchParams.set(
+    "q",
+    query + " (site:docs.godotengine.org OR site:docs.github.com OR site:developer.mozilla.org OR site:godotengine.org)"
+  );
+
   const response = await fetch(endpoint, {
-    headers: { "user-agent": "PixelSurvivalResearch/1.0 (+https://demin6632-del.github.io/chronicles-of-the-abyss-site/)" },
+    headers: {
+      "user-agent": "PixelSurvivalResearch/1.1 (+https://demin6632-del.github.io/chronicles-of-the-abyss-site/)"
+    },
     signal: AbortSignal.timeout(9000)
   });
   if (!response.ok) throw new Error("Поисковик временно недоступен.");
+
   const html = await response.text();
+  if (html.length > 2_000_000) throw new Error("Ответ поисковика слишком большой.");
+
+  const anchors = [...html.matchAll(/<a\b[^>]*>[\s\S]*?<\/a>/gi)];
   const results = [];
-  const blocks = html.match(/<div class="result[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
-  for (const block of blocks) {
-    const linkMatch = block.match(/<a[^>]*class="result__a"[^>]*href="([^"]+)"/i);
-    const titleMatch = block.match(/<a[^>]*class="result__a"[^>]*>([\s\S]*?)<\/a>/i);
-    const snippetMatch = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/div>/i);
-    if (!linkMatch || !titleMatch) continue;
-    let raw = linkMatch[1].replace(/&amp;/g, "&");
-    try { const wrapped = new URL(raw, "https://html.duckduckgo.com"); raw = wrapped.searchParams.get("uddg") || raw; } catch {}
+  for (let i = 0; i < anchors.length; i++) {
+    const anchor = anchors[i][0];
+    const openingTag = anchor.match(/^<a\b[^>]*>/i)?.[0] || "";
+    const classMatch = openingTag.match(/\bclass\s*=\s*["']([^"']*)["']/i);
+    if (!classMatch || !classMatch[1].split(/\s+/).includes("result__a")) continue;
+
+    const hrefMatch = openingTag.match(/\bhref\s*=\s*["']([^"']+)["']/i);
+    if (!hrefMatch) continue;
+
+    let raw = hrefMatch[1].replace(/&amp;/g, "&");
+    try {
+      const wrapped = new URL(raw, "https://html.duckduckgo.com");
+      raw = wrapped.searchParams.get("uddg") || wrapped.href;
+    } catch {
+      continue;
+    }
     const url = allowedUrl(raw);
     if (!url) continue;
-    results.push({ title: cleanText(titleMatch[1]), url, snippet: cleanText(snippetMatch?.[1] || "") });
+
+    const titleMatch = anchor.match(/^<a\b[^>]*>([\s\S]*?)<\/a>$/i);
+    const nextResult = html.indexOf('class="result__a"', anchors[i + 1]?.index ?? html.length);
+    const snippetArea = html.slice((anchors[i].index || 0) + anchor.length, nextResult > -1 ? nextResult : (anchors[i].index || 0) + anchor.length + 1800);
+    const snippetMatch = snippetArea.match(/class=["'][^"']*result__snippet[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+
+    results.push({
+      title: cleanText(titleMatch?.[1] || ""),
+      url,
+      snippet: cleanText(snippetMatch?.[1] || "")
+    });
     if (results.length >= 8) break;
   }
   return results;
 }
+
 const server = http.createServer(async (req, res) => {
   const origin = req.headers.origin;
-  if (origin && origin !== SITE_ORIGIN) return send(res, 403, { error: "Недопустимый источник запроса." });
+  if (origin && origin !== SITE_ORIGIN) {
+    return send(res, 403, { error: "Недопустимый источник запроса." });
+  }
+
   res.setHeader("access-control-allow-origin", SITE_ORIGIN);
   res.setHeader("vary", "Origin");
+
   if (req.method === "OPTIONS") {
-    res.writeHead(204, { "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-headers": "content-type" });
+    res.writeHead(204, {
+      "access-control-allow-methods": "GET, OPTIONS",
+      "access-control-allow-headers": "content-type"
+    });
     return res.end();
   }
+
   const url = new URL(req.url, "http://localhost");
-  if (url.pathname === "/health" && req.method === "GET") return send(res, 200, { ok: true, service: "pixelsurvival-research", mode: "web-search-only" });
-  if (url.pathname !== "/api/search" || req.method !== "GET") return send(res, 404, { error: "Маршрут не найден." });
-  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
-  if (rateLimited(ip)) return send(res, 429, { error: "Слишком много запросов. Попробуй через минуту." });
+  if (url.pathname === "/health" && req.method === "GET") {
+    return send(res, 200, {
+      ok: true,
+      service: "pixelsurvival-research",
+      mode: "web-search-only"
+    });
+  }
+  if (url.pathname !== "/api/search" || req.method !== "GET") {
+    return send(res, 404, { error: "Маршрут не найден." });
+  }
+
+  if (rateLimited(clientIp(req))) {
+    return send(res, 429, { error: "Слишком много запросов. Попробуй через минуту." });
+  }
+
   const query = (url.searchParams.get("q") || "").trim();
-  if (query.length < 3 || query.length > 160) return send(res, 400, { error: "Запрос должен содержать от 3 до 160 символов." });
-  if (/[<>\u0000-\u001f]/.test(query)) return send(res, 400, { error: "Запрос содержит недопустимые символы." });
+  if (query.length < 3 || query.length > 160) {
+    return send(res, 400, { error: "Запрос должен содержать от 3 до 160 символов." });
+  }
+  if (/[<>\u0000-\u001f]/.test(query)) {
+    return send(res, 400, { error: "Запрос содержит недопустимые символы." });
+  }
+
   try {
     const results = await search(query);
-    return send(res, 200, { query, results, note: "Это результаты поиска, а не сгенерированный ИИ-ответ. Проверяй содержание первоисточника." });
+    return send(res, 200, {
+      query,
+      results,
+      note: "Это результаты поиска, а не сгенерированный ИИ-ответ. Проверяй содержание первоисточника."
+    });
   } catch (error) {
     return send(res, 502, { error: error.message || "Не удалось выполнить поиск." });
   }
 });
-server.listen(PORT, "0.0.0.0", () => console.log("PixelSurvival research server listening on " + PORT));
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("PixelSurvival research server listening on " + PORT);
+});
