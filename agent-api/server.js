@@ -74,7 +74,7 @@ async function search(query) {
     headers: {
       "user-agent": "PixelSurvivalResearch/1.1 (+https://demin6632-del.github.io/chronicles-of-the-abyss-site/)"
     },
-    signal: AbortSignal.timeout(9000)
+    signal: AbortSignal.timeout(20000)
   });
   if (!response.ok) throw new Error("Поисковик временно недоступен.");
 
