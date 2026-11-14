@@ -315,22 +315,41 @@
     if (!API_BASE) { $("status").textContent = "Сервер поиска подключён."; return; }
     $("searchButton").disabled = true; $("status").textContent = "Ищем официальную документацию…"; $("results").replaceChildren();
     try {
-      const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q));
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Ошибка поиска");
+      if (q.length < 3 || q.length > 160) throw new Error("Запрос должен содержать от 3 до 160 символов.");
+      const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q), {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(12000)
+      });
+      let data;
+      try { data = await response.json(); }
+      catch { throw new Error("Сервер вернул некорректный ответ. Попробуй позже."); }
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Ошибка поиска");
+      if (!data || !Array.isArray(data.results)) throw new Error("Сервер вернул данные в неожиданном формате.");
       rememberSearch(q);
-      $("status").textContent = data.note || "Готово.";
-      for (const result of data.results) {
+      $("status").textContent = typeof data.note === "string" ? data.note : "Готово.";
+      const allowedHosts = new Set(["docs.godotengine.org","godotengine.org","docs.github.com","developer.mozilla.org"]);
+      for (const result of data.results.slice(0, 8)) {
+        if (!result || typeof result.title !== "string" || typeof result.snippet !== "string" || typeof result.url !== "string") continue;
+        let sourceUrl;
+        try {
+          sourceUrl = new URL(result.url);
+          if (sourceUrl.protocol !== "https:" || sourceUrl.username || sourceUrl.password || (sourceUrl.port && sourceUrl.port !== "443") || !allowedHosts.has(sourceUrl.hostname)) continue;
+        } catch { continue; }
         const article = document.createElement("article"); article.className = "result";
-        const heading = document.createElement("h3"); heading.textContent = result.title;
-        const snippet = document.createElement("p"); snippet.textContent = result.snippet;
-        const link = document.createElement("a"); link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
+        const heading = document.createElement("h3"); heading.textContent = result.title.slice(0, 500);
+        const snippet = document.createElement("p"); snippet.textContent = result.snippet.slice(0, 500);
+        const link = document.createElement("a"); link.href = sourceUrl.href; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
         const button = document.createElement("button"); button.textContent = "Сохранить источник";
         button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url,category:"Источники",folder:defaultFolder,createdAt:new Date().toISOString()}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
         article.append(heading,snippet,link,document.createTextNode(" "),button); $("results").append(article);
       }
       if (!data.results.length) $("results").textContent = "Ничего не найдено среди разрешённых источников.";
-    } catch (error) { $("status").textContent = error.message || "Не удалось выполнить поиск."; }
+    } catch (error) {
+      $("status").textContent = error.name === "TimeoutError" || error.name === "AbortError"
+        ? "Поиск занял слишком много времени. Попробуй ещё раз."
+        : (error.message || "Не удалось выполнить поиск.");
+    }
     finally { $("searchButton").disabled = false; }
   });
   $("createFolder").addEventListener("click", () => {
