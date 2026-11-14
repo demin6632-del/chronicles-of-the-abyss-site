@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b13">
+<title>Исследовательская лаборатория — PixelSurvival</title>
+<style>
+:root{color-scheme:dark;--bg:#0b100d;--panel:#141d17;--line:#2d4935;--green:#8ce36b;--muted:#b4c4b6}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#1b3522 0,#0b100d 60%);color:#f0f7f0;font:16px/1.55 system-ui,sans-serif}.wrap{width:min(100% - 28px,900px);margin:auto}header{padding:22px 0;border-bottom:1px solid var(--line)}a{color:var(--green)}.brand{font-weight:900;letter-spacing:.04em}.brand span{color:var(--green)}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:34px 0 12px}.muted{color:var(--muted)}.panel{background:#141d17e8;border:1px solid var(--line);border-radius:18px;padding:20px;margin:18px 0}.search{display:flex;gap:10px;flex-wrap:wrap}input,textarea{font:inherit;color:#f0f7f0;background:#0d150f;border:1px solid #45634a;border-radius:11px;padding:13px;width:100%}input{flex:1;min-width:190px}button{font:inherit;font-weight:800;border:0;border-radius:11px;padding:12px 18px;background:var(--green);color:#102013;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.small{font-size:13px}.status{padding:10px 12px;border-radius:10px;background:#203c25;color:#c9f8b6;margin-top:12px}.result{padding:14px 0;border-bottom:1px solid var(--line)}.result:last-child{border:0}.result h3{font-size:17px;margin:0 0 5px}.result p{margin:5px 0;color:var(--muted)}.result button,.secondary{background:transparent;border:1px solid #55765a;color:#d9eadb;padding:7px 11px;font-size:13px}.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.role{padding:13px;border:1px solid var(--line);border-radius:12px;background:#101912}.role p{margin:6px 0 10px;color:var(--muted);font-size:13px}.role button{width:100%}.saved{display:grid;gap:10px}.saved-item{padding:12px;border:1px solid var(--line);border-radius:12px}.saved-item p{margin:6px 0;color:var(--muted)}.saved-item button{margin:8px 8px 0 0}.saved-editor{display:grid;gap:9px}.saved-editor input,.saved-editor textarea,.saved-editor select{width:100%}.warning{border-left:3px solid #d5b45b;padding:10px 13px;background:#282416;color:#e9dba9;border-radius:8px}.footer{padding:28px 0;color:#91a293;font-size:13px}@media(max-width:560px){.panel{padding:15px}.search button{width:100%}.roles{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="wrap">
+<header><a class="brand" href="./">PIXEL<span>SURVIVAL</span></a> · Исследовательская лаборатория</header>
+<main>
+<h1>Интернет-исследования</h1>
+<p class="muted">Личная исследовательская лаборатория: поиск документации и сохранение полезных источников для разработки PixelSurvival.</p>
+<section class="panel">
+<h2>Найти информацию</h2>
+<form id="searchForm" class="search">
+<input id="query" minlength="3" maxlength="160" placeholder="Например: Godot 4 CharacterBody2D движение" required>
+<button id="searchButton" type="submit">Поиск</button>
+</form>
+<div id="status" class="status">Поиск подключён к отдельному серверу PixelSurvival Research. Источники ограничены официальной технической документацией.</div>
+<div id="results" aria-live="polite"></div>
+<div class="small muted" style="margin-top:14px">Недавние запросы</div>
+<div id="searchHistory" class="search" aria-live="polite" style="margin-top:8px"></div>
+</section>
+<section class="panel">
+<h2>Моя база знаний</h2>
+<p class="muted small">Сохранённые ссылки и твои заметки хранятся только в этом браузере на этом устройстве. Это пока не общая облачная память агентов.</p>
+<form id="noteForm">
+<input id="noteTitle" placeholder="Название заметки" maxlength="100" required>
+<select id="noteCategory" aria-label="Категория заметки" style="margin-top:10px"><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select>
+<select id="noteFolder" aria-label="Папка заметки" style="margin-top:10px"><option>Без папки</option></select>
+<textarea id="noteBody" rows="3" placeholder="Что важно запомнить?" maxlength="3000" required style="margin-top:10px"></textarea>
+<button type="submit" style="margin-top:10px">Сохранить заметку</button>
+</form>
+<div class="search" style="margin:12px 0">
+<button type="button" id="exportNotes" class="secondary">Экспортировать базу</button>
+<label class="secondary" for="importNotes" style="display:inline-flex;align-items:center;cursor:pointer;padding:12px 18px;border:1px solid #55765a;border-radius:11px">Импортировать базу</label>
+<input id="importNotes" type="file" accept="application/json,.json" hidden>
+</div>
+<p id="backupStatus" class="muted small" aria-live="polite">Можно переносить заметки между устройствами через JSON-файл. Файл хранится у тебя.</p>
+<label class="small muted" for="noteFilter" style="display:block;margin-top:16px">Поиск по сохранённым записям</label>
+<input id="noteFilter" type="search" placeholder="Введи слово из названия или заметки" style="margin-top:6px">
+<div class="search" style="margin-top:8px"><select id="categoryFilter" aria-label="Фильтр по категории"><option value="">Все категории</option><option>Без категории</option><option>Программирование</option><option>Геймдизайн</option><option>Тестирование</option><option>Архитектура</option><option>Интерфейс и графика</option><option>Источники</option></select><select id="sortNotes" aria-label="Сортировка записей"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="title">По названию А—Я</option></select></div>
+<div class="search" style="margin-top:10px">
+<select id="folderFilter" aria-label="Фильтр по папке"><option value="">Все папки</option><option>Без папки</option></select>
+<input id="newFolderName" maxlength="40" placeholder="Название новой папки" aria-label="Название новой папки">
+<button type="button" id="createFolder" class="secondary">Создать папку</button>
+</div>
+<p id="folderStatus" class="muted small" aria-live="polite">Папки помогают группировать заметки и источники.</p>
+<div class="search" style="margin-top:8px">
+<select id="manageFolder" aria-label="Папка для управления"><option value="">Выбери папку</option></select>
+<input id="renameFolderName" maxlength="40" placeholder="Новое название папки" aria-label="Новое название папки">
+<button type="button" id="renameFolder" class="secondary">Переименовать</button>
+</div>
+<div class="search" style="margin-top:8px">
+<select id="moveFolderTarget" aria-label="Куда перенести заметки"><option value="Без папки">Без папки</option></select>
+<button type="button" id="deleteFolder" class="secondary">Удалить папку и перенести заметки</button>
+</div>
+<p id="savedCount" class="muted small" aria-live="polite"></p>
+<div id="saved" class="saved"></div>
+</section>
+<section class="panel">
+<h2>Направления исследований</h2>
+<p class="muted small">Это тематические режимы поиска, а не реальные люди и не автономные ИИ-агенты. Выбери направление — лаборатория подготовит запрос по его теме.</p>
+<div class="roles">
+<article class="role"><b>🧭 Координатор</b><p>Планирование задач и порядок разработки.</p><button type="button" class="secondary role-search" data-query="Godot project architecture game development workflow">Найти материалы</button></article>
+<article class="role"><b>💻 Программист</b><p>GDScript, сцены, сигналы и оптимизация.</p><button type="button" class="secondary role-search" data-query="Godot 4 GDScript CharacterBody2D signals">Найти материалы</button></article>
+<article class="role"><b>🎮 Геймдизайнер</b><p>Механики выживания, баланс и прогресс.</p><button type="button" class="secondary role-search" data-query="Godot game design gameplay systems documentation">Найти материалы</button></article>
+<article class="role"><b>🧪 Тестировщик</b><p>Проверки, ошибки и воспроизводимость.</p><button type="button" class="secondary role-search" data-query="Godot testing debugging GDScript documentation">Найти материалы</button></article>
+<article class="role"><b>🏗️ Архитектор</b><p>Структура проекта и сохранение данных.</p><button type="button" class="secondary role-search" data-query="Godot resources scenes saving data architecture">Найти материалы</button></article>
+<article class="role"><b>🎨 UI/2D-дизайнер</b><p>Интерфейс, спрайты и 2D-элементы.</p><button type="button" class="secondary role-search" data-query="Godot 2D sprites Control UI theme documentation">Найти материалы</button></article>
+</div>
+</section>
+<section class="panel">
+<h2>Что умеет эта версия</h2>
+<ul>
+<li>Подготовлена отдельная страница, не меняющая главную страницу игры.</li>
+<li>Поиск будет ограничен официальными техническими источниками.</li>
+<li>Можно сохранять найденные ссылки и собственные заметки.</li>
+<li>Никакие файлы игры или GitHub автоматически не изменяются.</li>
+</ul>
+<div class="warning small">Важно: это исследовательский инструмент, а не полноценная языковая модель. Он не должен придумывать ответы вместо проверки источников.</div>
+</section>
+</main>
+<footer class="footer">PixelSurvival · Экспериментальная функция · Версия лаборатории 0.1</footer>
+</div>
+<script>
+(() => {
+  // Публичный адрес backend; секреты в браузере не хранятся.
+  const API_BASE = "https://pixelsurvival-research.onrender.com";
+  const $ = (id) => document.getElementById(id);
+  const storageKey = "pixelsurvival_research_notes_v1";
+  const folderStorageKey = "pixelsurvival_research_folders_v1";
+  const searchHistoryKey = "pixelsurvival_search_history_v1";
+  const loadSearchHistory = () => {
+    try {
+      const list = JSON.parse(localStorage.getItem(searchHistoryKey) || "[]");
+      return Array.isArray(list) ? list.filter(x => typeof x === "string").map(x => x.trim()).filter(Boolean).slice(0,20) : [];
+    } catch { return []; }
+  };
+  function rememberSearch(query) {
+    const history = [query, ...loadSearchHistory().filter(x => x.toLocaleLowerCase("ru") !== query.toLocaleLowerCase("ru"))].slice(0,20);
+    localStorage.setItem(searchHistoryKey, JSON.stringify(history));
+    renderSearchHistory();
+  }
+  function renderSearchHistory() {
+    const host = $("searchHistory"); if (!host) return;
+    host.replaceChildren();
+    const history = loadSearchHistory();
+    if (!history.length) {
+      const empty = document.createElement("span"); empty.textContent = "История пока пуста."; host.append(empty); return;
+    }
+    for (const query of history) {
+      const button = document.createElement("button");
+      button.type = "button"; button.className = "secondary"; button.textContent = query;
+      button.title = "Повторить поиск";
+      button.addEventListener("click", () => {
+        $("query").value = query;
+        $("searchForm").requestSubmit();
+      });
+      host.append(button);
+    }
+    const clear = document.createElement("button");
+    clear.type = "button"; clear.className = "secondary"; clear.textContent = "Очистить историю";
+    clear.addEventListener("click", () => {
+      localStorage.removeItem(searchHistoryKey);
+      renderSearchHistory();
+    });
+    host.append(clear);
+  }
+  const defaultFolder = "Без папки";
+  const loadFolders = () => {
+    try {
+      const values = JSON.parse(localStorage.getItem(folderStorageKey) || "[]");
+      return [...new Set(values.filter(x => typeof x === "string").map(x => x.trim()).filter(x => x && x !== defaultFolder && x.length <= 40))].slice(0,50);
+    } catch { return []; }
+  };
+  const saveFolders = (items) => localStorage.setItem(folderStorageKey, JSON.stringify([...new Set(items)].slice(0,50)));
+  function renderFolderControls() {
+    const folders = loadFolders();
+    const managed = $("manageFolder");
+    if (managed) {
+      const selected = managed.value;
+      managed.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = ""; placeholder.textContent = "Выбери папку";
+      managed.append(placeholder);
+      for (const folder of folders) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; managed.append(option);
+      }
+      if (folders.includes(selected)) managed.value = selected;
+    }
+    const target = $("moveFolderTarget");
+    if (target) {
+      const selected = target.value;
+      target.replaceChildren();
+      for (const folder of [defaultFolder, ...folders]) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; target.append(option);
+      }
+      if ([defaultFolder, ...folders].includes(selected)) target.value = selected;
+    }
+    for (const id of ["folderFilter", "noteFolder"]) {
+      const select = $(id); if (!select) continue;
+      const selected = select.value;
+      select.replaceChildren();
+      const first = document.createElement("option");
+      first.value = id === "folderFilter" ? "" : defaultFolder;
+      first.textContent = id === "folderFilter" ? "Все папки" : defaultFolder;
+      select.append(first);
+      for (const folder of folders) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; select.append(option);
+      }
+      if ([...select.options].some(option => option.value === selected)) select.value = selected;
+    }
+  }
+  const load = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
+  const save = (items) => localStorage.setItem(storageKey, JSON.stringify(items.slice(0,100)));
+  function safeImportedItems(value) {
+    if (!Array.isArray(value)) throw new Error("В файле ожидался список заметок.");
+    if (value.length > 500) throw new Error("В файле слишком много записей (максимум 500).");
+    const allowedHosts = new Set(["docs.godotengine.org","godotengine.org","docs.github.com","developer.mozilla.org"]);
+    return value.slice(0,100).map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const title = String(item.title || "").trim().slice(0,100);
+      const body = String(item.body || "").trim().slice(0,3000);
+      const categories = ["Без категории","Программирование","Геймдизайн","Тестирование","Архитектура","Интерфейс и графика","Источники"];
+      const category = categories.includes(item.category) ? item.category : "Без категории";
+      const createdAt = typeof item.createdAt === "string" && Number.isFinite(Date.parse(item.createdAt)) ? new Date(item.createdAt).toISOString() : "";
+      let url = "";
+      if (item.url) {
+        try {
+          const parsed = new URL(String(item.url));
+          if (parsed.protocol === "https:" && !parsed.username && !parsed.password && allowedHosts.has(parsed.hostname)) url = parsed.href;
+        } catch {}
+      }
+      if (!title || (!body && !url)) return null;
+      const folder = typeof item.folder === "string" && item.folder.trim().length <= 40 ? item.folder.trim() : defaultFolder;
+      return {id: String(item.id || crypto.randomUUID()).slice(0,80), title, body, category, folder, ...(createdAt ? {createdAt} : {}), ...(url ? {url} : {})};
+    }).filter(Boolean);
+  }
+  function renderSaved() {
+    const allItems = load();
+    const query = $("noteFilter").value.trim().toLocaleLowerCase("ru");
+    const category = $("categoryFilter").value;
+    const folder = $("folderFilter").value;
+    const sort = $("sortNotes").value;
+    const items = allItems.filter(item =>
+      (item.title + " " + item.body + " " + (item.url || "")).toLocaleLowerCase("ru").includes(query) &&
+      (!category || (item.category || "Без категории") === category) &&
+      (!folder || (item.folder || defaultFolder) === folder)
+    );
+    items.sort((a,b) => sort === "title"
+      ? a.title.localeCompare(b.title, "ru")
+      : sort === "oldest"
+        ? (Date.parse(a.createdAt || 0) || 0) - (Date.parse(b.createdAt || 0) || 0)
+        : (Date.parse(b.createdAt || 0) || 0) - (Date.parse(a.createdAt || 0) || 0));
+    $("savedCount").textContent = query ? `Показано ${items.length} из ${allItems.length}` : `Сохранено записей: ${allItems.length} из 100`;
+    $("saved").replaceChildren();
+    if (!allItems.length) { $("saved").textContent = "Пока ничего не сохранено."; return; }
+    if (!items.length) { $("saved").textContent = "По этому запросу ничего не найдено."; return; }
+    for (const item of items) {
+      const article = document.createElement("article"); article.className = "saved-item";
+      const title = document.createElement("strong"); title.textContent = item.title;
+      const categoryLabel = document.createElement("p"); categoryLabel.className = "small muted"; categoryLabel.textContent = "Категория: " + (item.category || "Без категории") + " · Папка: " + (item.folder || defaultFolder);
+      const body = document.createElement("p"); body.textContent = item.body;
+      article.append(title, categoryLabel, body);
+      if (item.url) { const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть источник"; article.append(link); }
+      const edit = document.createElement("button"); edit.className = "secondary"; edit.textContent = "Редактировать";
+      edit.addEventListener("click", () => {
+        const titleInput = document.createElement("input");
+        titleInput.value = item.title; titleInput.maxLength = 100; titleInput.setAttribute("aria-label", "Название заметки");
+        const categoryInput = document.createElement("select");
+        categoryInput.setAttribute("aria-label", "Категория заметки");
+        for (const name of ["Без категории","Программирование","Геймдизайн","Тестирование","Архитектура","Интерфейс и графика","Источники"]) {
+          const option = document.createElement("option"); option.value = name; option.textContent = name; categoryInput.append(option);
+        }
+        categoryInput.value = item.category || "Без категории";
+        const folderInput = document.createElement("select");
+        folderInput.setAttribute("aria-label", "Папка заметки");
+        for (const name of [defaultFolder, ...loadFolders()]) {
+          const option = document.createElement("option"); option.value = name; option.textContent = name; folderInput.append(option);
+        }
+        folderInput.value = item.folder || defaultFolder;
+        const bodyInput = document.createElement("textarea");
+        bodyInput.rows = 4; bodyInput.maxLength = 3000; bodyInput.value = item.body || "";
+        bodyInput.setAttribute("aria-label", "Текст заметки");
+        const saveEdit = document.createElement("button"); saveEdit.textContent = "Сохранить изменения";
+        const cancelEdit = document.createElement("button"); cancelEdit.className = "secondary"; cancelEdit.textContent = "Отмена";
+        const error = document.createElement("p"); error.className = "small"; error.setAttribute("role", "alert");
+        const editor = document.createElement("div"); editor.className = "saved-editor";
+        editor.append(titleInput, categoryInput, folderInput, bodyInput, saveEdit, cancelEdit, error);
+        article.replaceChildren(editor);
+        saveEdit.addEventListener("click", () => {
+          const nextTitle = titleInput.value.trim(), nextBody = bodyInput.value.trim();
+          if (!nextTitle || !nextBody) { error.textContent = "Заполни название и текст заметки."; return; }
+          const current = load();
+          const index = current.findIndex(x => x.id === item.id);
+          if (index < 0) { error.textContent = "Запись уже не найдена. Обнови список."; return; }
+          current[index] = {...current[index], title: nextTitle, body: nextBody, category: categoryInput.value, folder: folderInput.value, updatedAt: new Date().toISOString()};
+          save(current); renderSaved();
+        });
+        cancelEdit.addEventListener("click", renderSaved);
+      });
+      const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "Удалить";
+      remove.addEventListener("click", () => { save(load().filter(x => x.id !== item.id)); renderSaved(); });
+      article.append(edit, remove); $("saved").append(article);
+    }
+  }
+  $("exportNotes").addEventListener("click", () => {
+    const payload = {format:"pixelsurvival-research-notes",version:1,exportedAt:new Date().toISOString(),folders:loadFolders(),items:load()};
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a"); link.href = url; link.download = "pixelsurvival-knowledge-backup.json";
+    document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    $("backupStatus").textContent = "Резервная копия подготовлена. Сохрани JSON-файл в надёжном месте.";
+  });
+  $("importNotes").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0]; if (!file) return;
+    try {
+      if (file.size > 200000) throw new Error("Файл больше 200 КБ — импорт остановлен.");
+      const parsed = JSON.parse(await file.text());
+      if (parsed?.format !== "pixelsurvival-research-notes" || parsed?.version !== 1) throw new Error("Неизвестный формат резервной копии.");
+      const imported = safeImportedItems(parsed.items);
+      const importedFolders = Array.isArray(parsed.folders) ? parsed.folders.filter(x => typeof x === "string").map(x => x.trim()).filter(x => x && x !== defaultFolder && x.length <= 40).slice(0,50) : [];
+      saveFolders([...loadFolders(), ...importedFolders]);
+      const current = load(), seen = new Set(current.map(item => item.id));
+      const merged = [...current];
+      for (const item of imported) if (!seen.has(item.id)) { merged.push(item); seen.add(item.id); }
+      save(merged); renderFolderControls(); renderSaved();
+      $("backupStatus").textContent = "Импортировано записей: " + (merged.length - current.length) + ". Всего в браузере: " + Math.min(merged.length,100) + ".";
+    } catch (error) { $("backupStatus").textContent = error.message || "Не удалось импортировать файл."; }
+    finally { event.target.value = ""; }
+  });
+  document.querySelectorAll(".role-search").forEach((button) => {
+    button.addEventListener("click", () => {
+      $("query").value = button.dataset.query || "";
+      $("query").focus();
+      $("searchForm").requestSubmit();
+    });
+  });
+  $("noteForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const title = $("noteTitle").value.trim(), body = $("noteBody").value.trim();
+    if (!title || !body) return;
+    const items = load(); items.unshift({id: crypto.randomUUID(), title, body, category: $("noteCategory").value, folder: $("noteFolder").value || defaultFolder, createdAt: new Date().toISOString()});
+    save(items); $("noteForm").reset(); renderSaved();
+  });
+  $("searchForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const q = $("query").value.trim();
+    if (!API_BASE) { $("status").textContent = "Сервер поиска подключён."; return; }
+    $("searchButton").disabled = true; $("status").textContent = "Ищем официальную документацию…"; $("results").replaceChildren();
+    try {
+      if (q.length < 3 || q.length > 160) throw new Error("Запрос должен содержать от 3 до 160 символов.");
+      const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q), {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(12000)
+      });
+      let data;
+      try { data = await response.json(); }
+      catch { throw new Error("Сервер вернул некорректный ответ. Попробуй позже."); }
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Ошибка поиска");
+      if (!data || !Array.isArray(data.results)) throw new Error("Сервер вернул данные в неожиданном формате.");
+      rememberSearch(q);
+      $("status").textContent = typeof data.note === "string" ? data.note : "Готово.";
+      const allowedHosts = new Set(["docs.godotengine.org","godotengine.org","docs.github.com","developer.mozilla.org"]);
+      for (const result of data.results.slice(0, 8)) {
+        if (!result || typeof result.title !== "string" || typeof result.snippet !== "string" || typeof result.url !== "string") continue;
+        let sourceUrl;
+        try {
+          sourceUrl = new URL(result.url);
+          if (sourceUrl.protocol !== "https:" || sourceUrl.username || sourceUrl.password || (sourceUrl.port && sourceUrl.port !== "443") || !allowedHosts.has(sourceUrl.hostname)) continue;
+        } catch { continue; }
+        const article = document.createElement("article"); article.className = "result";
+        const heading = document.createElement("h3"); heading.textContent = result.title.slice(0, 500);
+        const snippet = document.createElement("p"); snippet.textContent = result.snippet.slice(0, 500);
+        const link = document.createElement("a"); link.href = sourceUrl.href; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Открыть первоисточник";
+        const button = document.createElement("button"); button.textContent = "Сохранить источник";
+        button.addEventListener("click", () => { const items = load(); items.unshift({id:crypto.randomUUID(),title:result.title,body:result.snippet,url:result.url,category:"Источники",folder:defaultFolder,createdAt:new Date().toISOString()}); save(items); renderSaved(); button.textContent = "Сохранено"; button.disabled = true; });
+        article.append(heading,snippet,link,document.createTextNode(" "),button); $("results").append(article);
+      }
+      if (!data.results.length) $("results").textContent = "Ничего не найдено среди разрешённых источников.";
+    } catch (error) {
+      $("status").textContent = error.name === "TimeoutError" || error.name === "AbortError"
+        ? "Поиск занял слишком много времени. Попробуй ещё раз."
+        : (error.message || "Не удалось выполнить поиск.");
+    }
+    finally { $("searchButton").disabled = false; }
+  });
+  $("createFolder").addEventListener("click", () => {
+    const input = $("newFolderName");
+    const name = input.value.trim();
+    if (!name) { $("folderStatus").textContent = "Введи название папки."; return; }
+    if (name.length > 40) { $("folderStatus").textContent = "Название папки должно быть не длиннее 40 символов."; return; }
+    if (name === defaultFolder || loadFolders().includes(name)) { $("folderStatus").textContent = "Такая папка уже существует или зарезервирована."; return; }
+    const folders = loadFolders();
+    if (folders.length >= 50) { $("folderStatus").textContent = "Достигнут лимит в 50 папок."; return; }
+    folders.push(name); saveFolders(folders); input.value = "";
+    renderFolderControls(); $("folderFilter").value = name;
+    $("folderStatus").textContent = "Папка создана: " + name;
+    renderSaved();
+  });
+  $("renameFolder").addEventListener("click", () => {
+    const oldName = $("manageFolder").value;
+    const newName = $("renameFolderName").value.trim();
+    if (!oldName) { $("folderStatus").textContent = "Сначала выбери папку для переименования."; return; }
+    if (!newName) { $("folderStatus").textContent = "Введи новое название папки."; return; }
+    if (newName.length > 40) { $("folderStatus").textContent = "Название папки должно быть не длиннее 40 символов."; return; }
+    const folders = loadFolders();
+    if (newName === defaultFolder || (newName !== oldName && folders.includes(newName))) {
+      $("folderStatus").textContent = "Такое название уже занято или зарезервировано."; return;
+    }
+    if (newName === oldName) { $("folderStatus").textContent = "Название не изменилось."; return; }
+    const oldNotes = localStorage.getItem(storageKey);
+    const oldFolders = localStorage.getItem(folderStorageKey);
+    try {
+      const notes = load().map(item => (item.folder || defaultFolder) === oldName ? {...item, folder:newName} : item);
+      save(notes);
+      saveFolders(folders.map(folder => folder === oldName ? newName : folder));
+    } catch (error) {
+      try {
+        if (oldNotes === null) localStorage.removeItem(storageKey); else localStorage.setItem(storageKey, oldNotes);
+        if (oldFolders === null) localStorage.removeItem(folderStorageKey); else localStorage.setItem(folderStorageKey, oldFolders);
+      } catch {}
+      $("folderStatus").textContent = "Не удалось переименовать папку: недостаточно места в хранилище.";
+      return;
+    }
+    $("renameFolderName").value = "";
+    renderFolderControls(); $("manageFolder").value = newName; $("folderFilter").value = newName;
+    $("folderStatus").textContent = "Папка переименована. Все её заметки сохранены.";
+    renderSaved();
+  });
+  $("deleteFolder").addEventListener("click", () => {
+    const oldName = $("manageFolder").value;
+    const targetName = $("moveFolderTarget").value || defaultFolder;
+    if (!oldName) { $("folderStatus").textContent = "Сначала выбери папку для удаления."; return; }
+    if (oldName === targetName) { $("folderStatus").textContent = "Выбери другую папку для переноса заметок."; return; }
+    if (!loadFolders().includes(oldName)) { $("folderStatus").textContent = "Эта папка уже отсутствует."; renderFolderControls(); return; }
+    const oldNotes = localStorage.getItem(storageKey);
+    const oldFolders = localStorage.getItem(folderStorageKey);
+    try {
+      const notes = load().map(item => (item.folder || defaultFolder) === oldName ? {...item, folder:targetName} : item);
+      save(notes);
+      saveFolders(loadFolders().filter(folder => folder !== oldName));
+    } catch (error) {
+      try {
+        if (oldNotes === null) localStorage.removeItem(storageKey); else localStorage.setItem(storageKey, oldNotes);
+        if (oldFolders === null) localStorage.removeItem(folderStorageKey); else localStorage.setItem(folderStorageKey, oldFolders);
+      } catch {}
+      $("folderStatus").textContent = "Не удалось удалить папку: изменения отменены, если хранилище доступно.";
+      return;
+    }
+    renderFolderControls(); $("manageFolder").value = ""; $("folderFilter").value = "";
+    $("folderStatus").textContent = "Папка удалена. Её заметки перенесены в «" + targetName + "».";
+    renderSaved();
+  });
+  $("folderFilter").addEventListener("change", renderSaved);
+  $("noteFilter").addEventListener("input", renderSaved);
+  $("categoryFilter").addEventListener("change", renderSaved);
+  $("sortNotes").addEventListener("change", renderSaved);
+  renderFolderControls();
+  renderSearchHistory();
+  renderSaved();
+})();
+</script>
+</body></html>
