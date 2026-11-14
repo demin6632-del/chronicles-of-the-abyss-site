@@ -39,37 +39,28 @@ function cleanText(value) {
 function allowedUrl(raw) {
   try {
     const url = new URL(raw);
-    if (url.protocol !== "https:" || url.username || url.password) return null;
-    return ALLOWED_HOSTS.has(url.hostname) ? url.href : null;
+    if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return null;
+    if (!ALLOWED_HOSTS.has(url.hostname)) return null;
+    url.hash = "";
+    return url.href;
   } catch {
     return null;
   }
 }
 
-function clientIp(req) {
-  // Reverse proxies append the connecting client address to X-Forwarded-For.
-  // Use the final entry so a caller cannot choose the rate-limit key by
-  // prepending a forged address.
-  const forwarded = String(req.headers["x-forwarded-for"] || "")
-    .split(",").map(value => value.trim()).filter(Boolean);
-  return forwarded.at(-1) || req.socket.remoteAddress || "unknown";
-}
-
-function rateLimited(ip) {
+function rateLimited() {
+  // A shared service-wide limit avoids trusting caller-controlled forwarding
+  // headers for client identity. It protects the free search backend from
+  // bursts; it is intentionally not presented as per-user throttling.
   const now = Date.now();
-  if (requests.size > 5000) {
-    for (const [key, entry] of requests) {
-      if (now - entry.start > WINDOW_MS) requests.delete(key);
-    }
-  }
-  const entry = requests.get(ip) || { start: now, count: 0 };
+  const entry = requests.get("global") || { start: now, count: 0 };
   if (now - entry.start > WINDOW_MS) {
     entry.start = now;
     entry.count = 0;
   }
   entry.count++;
-  requests.set(ip, entry);
-  return entry.count > MAX_REQUESTS;
+  requests.set("global", entry);
+  return entry.count > MAX_REQUESTS * 6;
 }
 
 async function search(query) {
@@ -155,8 +146,8 @@ const server = http.createServer(async (req, res) => {
     return send(res, 404, { error: "Маршрут не найден." });
   }
 
-  if (rateLimited(clientIp(req))) {
-    return send(res, 429, { error: "Слишком много запросов. Попробуй через минуту." });
+  if (rateLimited()) {
+    return send(res, 429, { error: "Сервис получил слишком много запросов. Попробуй через минуту." });
   }
 
   const query = (url.searchParams.get("q") || "").trim();
