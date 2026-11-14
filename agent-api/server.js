@@ -79,10 +79,8 @@ async function fetchSearchPage(endpoint, provider) {
 
 function extractBing(html) {
   const results = [];
-  // Bing can vary the attributes/order around result containers, so locate
-  // heading links directly rather than depending on the b_algo wrapper.
-  for (const match of html.matchAll(/<h2\\b[^>]*>\\s*<a\\b([^>]*)>([\\s\\S]*?)<\\/a>\\s*<\\/h2>/gi)) {
-    const href = match[1].match(/\\bhref\\s*=\\s*["']([^"']+)["']/i)?.[1];
+  for (const match of html.matchAll(/<h2\b[^>]*>\s*<a\b([^>]*)>([\s\S]*?)<\/a>\s*<\/h2>/gi)) {
+    const href = match[1].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
     if (!href) continue;
     const url = allowedUrl(href.replace(/&amp;/g, "&"));
     if (!url) continue;
@@ -96,8 +94,8 @@ function extractBing(html) {
 
 function extractGoogle(html) {
   const results = [];
-  for (const match of html.matchAll(/<a\\b([^>]*)>([\\s\\S]*?<h3\\b[^>]*>[\\s\\S]*?<\\/h3>[\\s\\S]*?)<\\/a>/gi)) {
-    let href = match[1].match(/\\bhref\\s*=\\s*["']([^"']+)["']/i)?.[1];
+  for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?<h3\b[^>]*>[\s\S]*?<\/h3>[\s\S]*?)<\/a>/gi)) {
+    let href = match[1].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
     if (!href) continue;
     href = href.replace(/&amp;/g, "&");
     try {
@@ -108,7 +106,7 @@ function extractGoogle(html) {
     } catch { continue; }
     const url = allowedUrl(href);
     if (!url) continue;
-    const heading = match[2].match(/<h3\\b[^>]*>([\\s\\S]*?)<\\/h3>/i);
+    const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
     const title = cleanText(heading?.[1] || "");
     if (!title) continue;
     results.push({ title, url, snippet: "" });
