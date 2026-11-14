@@ -79,14 +79,16 @@ async function fetchSearchPage(endpoint, provider) {
 
 function extractBing(html) {
   const results = [];
-  for (const match of html.matchAll(/<li\b[^>]*class=["'][^"']*\bb_algo\b[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi)) {
-    const block = match[1];
-    const link = block.match(/<h2\b[^>]*>\s*<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
-    if (!link) continue;
-    const url = allowedUrl(link[1].replace(/&amp;/g, "&"));
+  // Bing can vary the attributes/order around result containers, so locate
+  // heading links directly rather than depending on the b_algo wrapper.
+  for (const match of html.matchAll(/<h2\\b[^>]*>\\s*<a\\b([^>]*)>([\\s\\S]*?)<\\/a>\\s*<\\/h2>/gi)) {
+    const href = match[1].match(/\\bhref\\s*=\\s*["']([^"']+)["']/i)?.[1];
+    if (!href) continue;
+    const url = allowedUrl(href.replace(/&amp;/g, "&"));
     if (!url) continue;
-    const snippet = block.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i);
-    results.push({ title: cleanText(link[2]), url, snippet: cleanText(snippet?.[1] || "") });
+    const title = cleanText(match[2]);
+    if (!title) continue;
+    results.push({ title, url, snippet: "" });
     if (results.length >= 8) break;
   }
   return results;
@@ -94,11 +96,22 @@ function extractBing(html) {
 
 function extractGoogle(html) {
   const results = [];
-  for (const match of html.matchAll(/<a\b[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?<h3\b[^>]*>[\s\S]*?<\/h3>[\s\S]*?)<\/a>/gi)) {
-    const url = allowedUrl(match[1].replace(/&amp;/g, "&"));
+  for (const match of html.matchAll(/<a\\b([^>]*)>([\\s\\S]*?<h3\\b[^>]*>[\\s\\S]*?<\\/h3>[\\s\\S]*?)<\\/a>/gi)) {
+    let href = match[1].match(/\\bhref\\s*=\\s*["']([^"']+)["']/i)?.[1];
+    if (!href) continue;
+    href = href.replace(/&amp;/g, "&");
+    try {
+      const link = new URL(href, "https://www.google.com");
+      if (link.hostname === "www.google.com" && link.pathname === "/url") {
+        href = link.searchParams.get("q") || link.searchParams.get("url") || "";
+      }
+    } catch { continue; }
+    const url = allowedUrl(href);
     if (!url) continue;
-    const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-    results.push({ title: cleanText(heading?.[1] || ""), url, snippet: "" });
+    const heading = match[2].match(/<h3\\b[^>]*>([\\s\\S]*?)<\\/h3>/i);
+    const title = cleanText(heading?.[1] || "");
+    if (!title) continue;
+    results.push({ title, url, snippet: "" });
     if (results.length >= 8) break;
   }
   return results;
@@ -170,7 +183,7 @@ async function search(query) {
       const html = await fetchSearchPage(provider.url(), provider.name);
       const results = provider.parse(html);
       if (results.length) return results;
-      failures.push(provider.name + ": no allowed results");
+      const pageTitle = cleanText(html.match(/<title\\b[^>]*>([\\s\\S]*?)<\\/title>/i)?.[1] || "no title").slice(0, 80);\n      console.warn("Search provider returned no allowed results:", provider.name, "html_bytes=" + html.length, "title=" + pageTitle);\n      failures.push(provider.name + ": no allowed results");
     } catch (error) {
       // Log only provider and error type; never log the user's search query.
       console.warn("Search provider failed:", provider.name, error.name || "Error");
