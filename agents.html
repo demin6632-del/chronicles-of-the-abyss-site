@@ -23,6 +23,8 @@
 </form>
 <div id="status" class="status">Поиск подключён к отдельному серверу PixelSurvival Research. Источники ограничены официальной технической документацией.</div>
 <div id="results" aria-live="polite"></div>
+<div class="small muted" style="margin-top:14px">Недавние запросы</div>
+<div id="searchHistory" class="search" aria-live="polite" style="margin-top:8px"></div>
 </section>
 <section class="panel">
 <h2>Моя база знаний</h2>
@@ -84,6 +86,43 @@
   const $ = (id) => document.getElementById(id);
   const storageKey = "pixelsurvival_research_notes_v1";
   const folderStorageKey = "pixelsurvival_research_folders_v1";
+  const searchHistoryKey = "pixelsurvival_search_history_v1";
+  const loadSearchHistory = () => {
+    try {
+      const list = JSON.parse(localStorage.getItem(searchHistoryKey) || "[]");
+      return Array.isArray(list) ? list.filter(x => typeof x === "string").map(x => x.trim()).filter(Boolean).slice(0,20) : [];
+    } catch { return []; }
+  };
+  function rememberSearch(query) {
+    const history = [query, ...loadSearchHistory().filter(x => x.toLocaleLowerCase("ru") !== query.toLocaleLowerCase("ru"))].slice(0,20);
+    localStorage.setItem(searchHistoryKey, JSON.stringify(history));
+    renderSearchHistory();
+  }
+  function renderSearchHistory() {
+    const host = $("searchHistory"); if (!host) return;
+    host.replaceChildren();
+    const history = loadSearchHistory();
+    if (!history.length) {
+      const empty = document.createElement("span"); empty.textContent = "История пока пуста."; host.append(empty); return;
+    }
+    for (const query of history) {
+      const button = document.createElement("button");
+      button.type = "button"; button.className = "secondary"; button.textContent = query;
+      button.title = "Повторить поиск";
+      button.addEventListener("click", () => {
+        $("query").value = query;
+        $("searchForm").requestSubmit();
+      });
+      host.append(button);
+    }
+    const clear = document.createElement("button");
+    clear.type = "button"; clear.className = "secondary"; clear.textContent = "Очистить историю";
+    clear.addEventListener("click", () => {
+      localStorage.removeItem(searchHistoryKey);
+      renderSearchHistory();
+    });
+    host.append(clear);
+  }
   const defaultFolder = "Без папки";
   const loadFolders = () => {
     try {
@@ -249,6 +288,7 @@
       const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q));
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Ошибка поиска");
+      rememberSearch(q);
       $("status").textContent = data.note || "Готово.";
       for (const result of data.results) {
         const article = document.createElement("article"); article.className = "result";
@@ -281,6 +321,7 @@
   $("categoryFilter").addEventListener("change", renderSaved);
   $("sortNotes").addEventListener("change", renderSaved);
   renderFolderControls();
+  renderSearchHistory();
   renderSaved();
 })();
 </script>
