@@ -40,11 +40,28 @@ function allowedUrl(raw) {
   try {
     const url = new URL(raw);
     if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return null;
-    if (!ALLOWED_HOSTS.has(url.hostname)) return null;
+    const hostAllowed = [...ALLOWED_HOSTS].some(host => url.hostname === host || url.hostname.endsWith("." + host));
+    if (!hostAllowed) return null;
     url.hash = "";
     return url.href;
   } catch {
     return null;
+  }
+}
+
+function unwrapBingUrl(raw) {
+  try {
+    const link = new URL(raw, "https://www.bing.com");
+    if (link.hostname.endsWith("bing.com") && link.pathname.startsWith("/ck/a")) {
+      const encoded = link.searchParams.get("u") || "";
+      if (encoded.startsWith("a1")) {
+        const decoded = Buffer.from(encoded.slice(2), "base64url").toString("utf8");
+        if (decoded.startsWith("https://")) return decoded;
+      }
+    }
+    return link.href;
+  } catch {
+    return raw;
   }
 }
 
@@ -82,7 +99,7 @@ function extractBing(html) {
   for (const match of html.matchAll(/<h2\b[^>]*>\s*<a\b([^>]*)>([\s\S]*?)<\/a>\s*<\/h2>/gi)) {
     const href = match[1].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
     if (!href) continue;
-    const url = allowedUrl(href.replace(/&amp;/g, "&"));
+    const url = allowedUrl(unwrapBingUrl(href.replace(/&amp;/g, "&")));
     if (!url) continue;
     const title = cleanText(match[2]);
     if (!title) continue;
@@ -94,8 +111,11 @@ function extractBing(html) {
 
 function extractGoogle(html) {
   const results = [];
-  for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?<h3\b[^>]*>[\s\S]*?<\/h3>[\s\S]*?)<\/a>/gi)) {
-    let href = match[1].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
+  for (const heading of html.matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/gi)) {
+    const before = html.slice(Math.max(0, heading.index - 2500), heading.index);
+    const anchors = [...before.matchAll(/<a\b([^>]*)>/gi)];
+    const attrs = anchors.at(-1)?.[1] || "";
+    let href = attrs.match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
     if (!href) continue;
     href = href.replace(/&amp;/g, "&");
     try {
@@ -106,8 +126,7 @@ function extractGoogle(html) {
     } catch { continue; }
     const url = allowedUrl(href);
     if (!url) continue;
-    const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-    const title = cleanText(heading?.[1] || "");
+    const title = cleanText(heading[1]);
     if (!title) continue;
     results.push({ title, url, snippet: "" });
     if (results.length >= 8) break;
