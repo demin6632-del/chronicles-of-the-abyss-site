@@ -181,7 +181,9 @@ async function search(query) {
       const html = await fetchSearchPage(provider.url(), provider.name);
       const results = provider.parse(html);
       if (results.length) return results;
-      const pageTitle = cleanText(html.match(/<title\\b[^>]*>([\\s\\S]*?)<\\/title>/i)?.[1] || "no title").slice(0, 80);\n      console.warn("Search provider returned no allowed results:", provider.name, "html_bytes=" + html.length, "title=" + pageTitle);\n      failures.push(provider.name + ": no allowed results");
+      const pageTitle = cleanText(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "no title").slice(0, 80);
+      console.warn("Search provider returned no allowed results:", provider.name, "html_bytes=" + html.length, "title=" + pageTitle);
+      failures.push(provider.name + ": no allowed results");
     } catch (error) {
       // Log only provider and error type; never log the user's search query.
       console.warn("Search provider failed:", provider.name, error.name || "Error");
