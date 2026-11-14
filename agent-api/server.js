@@ -63,24 +63,48 @@ function rateLimited() {
   return entry.count > MAX_REQUESTS * 6;
 }
 
-async function search(query) {
-  const endpoint = new URL("https://html.duckduckgo.com/html/");
-  endpoint.searchParams.set(
-    "q",
-    query + " (site:docs.godotengine.org OR site:docs.github.com OR site:developer.mozilla.org OR site:godotengine.org)"
-  );
-
+async function fetchSearchPage(endpoint, provider) {
   const response = await fetch(endpoint, {
     headers: {
-      "user-agent": "PixelSurvivalResearch/1.1 (+https://demin6632-del.github.io/chronicles-of-the-abyss-site/)"
+      "user-agent": "Mozilla/5.0 (compatible; PixelSurvivalResearch/1.2; +https://demin6632-del.github.io/chronicles-of-the-abyss-site/)",
+      "accept": "text/html,application/xhtml+xml"
     },
-    signal: AbortSignal.timeout(20000)
+    signal: AbortSignal.timeout(15000)
   });
-  if (!response.ok) throw new Error("Поисковик временно недоступен.");
-
+  if (!response.ok) throw new Error(provider + ": HTTP " + response.status);
   const html = await response.text();
-  if (html.length > 2_000_000) throw new Error("Ответ поисковика слишком большой.");
+  if (html.length > 2_000_000) throw new Error(provider + ": response too large");
+  return html;
+}
 
+function extractBing(html) {
+  const results = [];
+  for (const match of html.matchAll(/<li\b[^>]*class=["'][^"']*\bb_algo\b[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi)) {
+    const block = match[1];
+    const link = block.match(/<h2\b[^>]*>\s*<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
+    if (!link) continue;
+    const url = allowedUrl(link[1].replace(/&amp;/g, "&"));
+    if (!url) continue;
+    const snippet = block.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i);
+    results.push({ title: cleanText(link[2]), url, snippet: cleanText(snippet?.[1] || "") });
+    if (results.length >= 8) break;
+  }
+  return results;
+}
+
+function extractGoogle(html) {
+  const results = [];
+  for (const match of html.matchAll(/<a\b[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?<h3\b[^>]*>[\s\S]*?<\/h3>[\s\S]*?)<\/a>/gi)) {
+    const url = allowedUrl(match[1].replace(/&amp;/g, "&"));
+    if (!url) continue;
+    const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
+    results.push({ title: cleanText(heading?.[1] || ""), url, snippet: "" });
+    if (results.length >= 8) break;
+  }
+  return results;
+}
+
+function extractDuckDuckGo(html) {
   const anchors = [...html.matchAll(/<a\b[^>]*>[\s\S]*?<\/a>/gi)];
   const results = [];
   for (let i = 0; i < anchors.length; i++) {
@@ -88,33 +112,72 @@ async function search(query) {
     const openingTag = anchor.match(/^<a\b[^>]*>/i)?.[0] || "";
     const classMatch = openingTag.match(/\bclass\s*=\s*["']([^"']*)["']/i);
     if (!classMatch || !classMatch[1].split(/\s+/).includes("result__a")) continue;
-
     const hrefMatch = openingTag.match(/\bhref\s*=\s*["']([^"']+)["']/i);
     if (!hrefMatch) continue;
-
     let raw = hrefMatch[1].replace(/&amp;/g, "&");
     try {
       const wrapped = new URL(raw, "https://html.duckduckgo.com");
       raw = wrapped.searchParams.get("uddg") || wrapped.href;
-    } catch {
-      continue;
-    }
+    } catch { continue; }
     const url = allowedUrl(raw);
     if (!url) continue;
-
     const titleMatch = anchor.match(/^<a\b[^>]*>([\s\S]*?)<\/a>$/i);
     const nextResult = html.indexOf('class="result__a"', anchors[i + 1]?.index ?? html.length);
-    const snippetArea = html.slice((anchors[i].index || 0) + anchor.length, nextResult > -1 ? nextResult : (anchors[i].index || 0) + anchor.length + 1800);
+    const offset = anchors[i].index || 0;
+    const snippetArea = html.slice(offset + anchor.length, nextResult > -1 ? nextResult : offset + anchor.length + 1800);
     const snippetMatch = snippetArea.match(/class=["'][^"']*result__snippet[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
-
-    results.push({
-      title: cleanText(titleMatch?.[1] || ""),
-      url,
-      snippet: cleanText(snippetMatch?.[1] || "")
-    });
+    results.push({ title: cleanText(titleMatch?.[1] || ""), url, snippet: cleanText(snippetMatch?.[1] || "") });
     if (results.length >= 8) break;
   }
   return results;
+}
+
+async function search(query) {
+  const scopedQuery = query + " (site:docs.godotengine.org OR site:docs.github.com OR site:developer.mozilla.org OR site:godotengine.org)";
+  const providers = [
+    {
+      name: "Bing",
+      url: () => {
+        const endpoint = new URL("https://www.bing.com/search");
+        endpoint.searchParams.set("q", scopedQuery);
+        return endpoint;
+      },
+      parse: extractBing
+    },
+    {
+      name: "Google",
+      url: () => {
+        const endpoint = new URL("https://www.google.com/search");
+        endpoint.searchParams.set("q", scopedQuery);
+        return endpoint;
+      },
+      parse: extractGoogle
+    },
+    {
+      name: "DuckDuckGo",
+      url: () => {
+        const endpoint = new URL("https://html.duckduckgo.com/html/");
+        endpoint.searchParams.set("q", scopedQuery);
+        return endpoint;
+      },
+      parse: extractDuckDuckGo
+    }
+  ];
+
+  const failures = [];
+  for (const provider of providers) {
+    try {
+      const html = await fetchSearchPage(provider.url(), provider.name);
+      const results = provider.parse(html);
+      if (results.length) return results;
+      failures.push(provider.name + ": no allowed results");
+    } catch (error) {
+      // Log only provider and error type; never log the user's search query.
+      console.warn("Search provider failed:", provider.name, error.name || "Error");
+      failures.push(provider.name + ": unavailable");
+    }
+  }
+  throw new Error("Бесплатные поисковики временно недоступны или не вернули подходящие официальные страницы. Попробуй позже.");
 }
 
 const server = http.createServer(async (req, res) => {
