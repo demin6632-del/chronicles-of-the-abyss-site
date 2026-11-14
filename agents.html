@@ -51,6 +51,15 @@
 <button type="button" id="createFolder" class="secondary">Создать папку</button>
 </div>
 <p id="folderStatus" class="muted small" aria-live="polite">Папки помогают группировать заметки и источники.</p>
+<div class="search" style="margin-top:8px">
+<select id="manageFolder" aria-label="Папка для управления"><option value="">Выбери папку</option></select>
+<input id="renameFolderName" maxlength="40" placeholder="Новое название папки" aria-label="Новое название папки">
+<button type="button" id="renameFolder" class="secondary">Переименовать</button>
+</div>
+<div class="search" style="margin-top:8px">
+<select id="moveFolderTarget" aria-label="Куда перенести заметки"><option value="Без папки">Без папки</option></select>
+<button type="button" id="deleteFolder" class="secondary">Удалить папку и перенести заметки</button>
+</div>
 <p id="savedCount" class="muted small" aria-live="polite"></p>
 <div id="saved" class="saved"></div>
 </section>
@@ -133,6 +142,27 @@
   const saveFolders = (items) => localStorage.setItem(folderStorageKey, JSON.stringify([...new Set(items)].slice(0,50)));
   function renderFolderControls() {
     const folders = loadFolders();
+    const managed = $("manageFolder");
+    if (managed) {
+      const selected = managed.value;
+      managed.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = ""; placeholder.textContent = "Выбери папку";
+      managed.append(placeholder);
+      for (const folder of folders) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; managed.append(option);
+      }
+      if (folders.includes(selected)) managed.value = selected;
+    }
+    const target = $("moveFolderTarget");
+    if (target) {
+      const selected = target.value;
+      target.replaceChildren();
+      for (const folder of [defaultFolder, ...folders]) {
+        const option = document.createElement("option"); option.value = folder; option.textContent = folder; target.append(option);
+      }
+      if ([defaultFolder, ...folders].includes(selected)) target.value = selected;
+    }
     for (const id of ["folderFilter", "noteFolder"]) {
       const select = $(id); if (!select) continue;
       const selected = select.value;
@@ -314,6 +344,60 @@
     folders.push(name); saveFolders(folders); input.value = "";
     renderFolderControls(); $("folderFilter").value = name;
     $("folderStatus").textContent = "Папка создана: " + name;
+    renderSaved();
+  });
+  $("renameFolder").addEventListener("click", () => {
+    const oldName = $("manageFolder").value;
+    const newName = $("renameFolderName").value.trim();
+    if (!oldName) { $("folderStatus").textContent = "Сначала выбери папку для переименования."; return; }
+    if (!newName) { $("folderStatus").textContent = "Введи новое название папки."; return; }
+    if (newName.length > 40) { $("folderStatus").textContent = "Название папки должно быть не длиннее 40 символов."; return; }
+    const folders = loadFolders();
+    if (newName === defaultFolder || (newName !== oldName && folders.includes(newName))) {
+      $("folderStatus").textContent = "Такое название уже занято или зарезервировано."; return;
+    }
+    if (newName === oldName) { $("folderStatus").textContent = "Название не изменилось."; return; }
+    const oldNotes = localStorage.getItem(storageKey);
+    const oldFolders = localStorage.getItem(folderStorageKey);
+    try {
+      const notes = load().map(item => (item.folder || defaultFolder) === oldName ? {...item, folder:newName} : item);
+      save(notes);
+      saveFolders(folders.map(folder => folder === oldName ? newName : folder));
+    } catch (error) {
+      try {
+        if (oldNotes === null) localStorage.removeItem(storageKey); else localStorage.setItem(storageKey, oldNotes);
+        if (oldFolders === null) localStorage.removeItem(folderStorageKey); else localStorage.setItem(folderStorageKey, oldFolders);
+      } catch {}
+      $("folderStatus").textContent = "Не удалось переименовать папку: недостаточно места в хранилище.";
+      return;
+    }
+    $("renameFolderName").value = "";
+    renderFolderControls(); $("manageFolder").value = newName; $("folderFilter").value = newName;
+    $("folderStatus").textContent = "Папка переименована. Все её заметки сохранены.";
+    renderSaved();
+  });
+  $("deleteFolder").addEventListener("click", () => {
+    const oldName = $("manageFolder").value;
+    const targetName = $("moveFolderTarget").value || defaultFolder;
+    if (!oldName) { $("folderStatus").textContent = "Сначала выбери папку для удаления."; return; }
+    if (oldName === targetName) { $("folderStatus").textContent = "Выбери другую папку для переноса заметок."; return; }
+    if (!loadFolders().includes(oldName)) { $("folderStatus").textContent = "Эта папка уже отсутствует."; renderFolderControls(); return; }
+    const oldNotes = localStorage.getItem(storageKey);
+    const oldFolders = localStorage.getItem(folderStorageKey);
+    try {
+      const notes = load().map(item => (item.folder || defaultFolder) === oldName ? {...item, folder:targetName} : item);
+      save(notes);
+      saveFolders(loadFolders().filter(folder => folder !== oldName));
+    } catch (error) {
+      try {
+        if (oldNotes === null) localStorage.removeItem(storageKey); else localStorage.setItem(storageKey, oldNotes);
+        if (oldFolders === null) localStorage.removeItem(folderStorageKey); else localStorage.setItem(folderStorageKey, oldFolders);
+      } catch {}
+      $("folderStatus").textContent = "Не удалось удалить папку: изменения отменены, если хранилище доступно.";
+      return;
+    }
+    renderFolderControls(); $("manageFolder").value = ""; $("folderFilter").value = "";
+    $("folderStatus").textContent = "Папка удалена. Её заметки перенесены в «" + targetName + "».";
     renderSaved();
   });
   $("folderFilter").addEventListener("change", renderSaved);
