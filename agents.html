@@ -319,7 +319,7 @@
       const response = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q), {
         method: "GET",
         headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(12000)
+        signal: AbortSignal.timeout(90000)
       });
       let data;
       try { data = await response.json(); }
